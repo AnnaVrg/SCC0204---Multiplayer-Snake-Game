@@ -26,20 +26,14 @@ public class GameScreen extends ScreenAdapter {
 
     private OrthographicCamera camera;
     private Viewport viewport;
-
     private SpriteBatch batch;
 
-    // Textures to hold the .png files in memory
     private Texture headTex, bodyTex, tailTex, cornerTex, fruitTex, tileTex1, tileTex2;
-    // TextureRegions allow us to easily define a rotation origin for the sprites
     private TextureRegion headRegion, bodyRegion, tailRegion, cornerRegion;
 
     private Snake player1;
     private Snake player2;
-
     private Food apple;
-
-    // MODIFIED: Added SoundManager to the screen
     private SoundManager soundManager;
 
     private int scoreP1 = 0;
@@ -48,8 +42,6 @@ public class GameScreen extends ScreenAdapter {
     private ScoreBoard scoreBoard;
     private PauseMenu pauseMenu;
 
-    // Scales the 16x16 art up to 32x32 visually on the screen
-
     public GameScreen(SnakeGame game) {
         this.game = game;
         this.batch = game.batch;
@@ -57,7 +49,6 @@ public class GameScreen extends ScreenAdapter {
         camera = new OrthographicCamera();
         viewport = new FitViewport(V_WIDTH, V_HEIGHT, camera);
 
-        // Load the 16x16 pixel art files (make sure these exist in your assets folder)
         headTex = new Texture("head.png");
         bodyTex = new Texture("body.png");
         tailTex = new Texture("tail.png");
@@ -66,7 +57,6 @@ public class GameScreen extends ScreenAdapter {
         tileTex1 = new Texture("tile1.png");
         tileTex2 = new Texture("tile2.png");
 
-        // Wrap the directional textures in a TextureRegion
         headRegion = new TextureRegion(headTex);
         bodyRegion = new TextureRegion(bodyTex);
         tailRegion = new TextureRegion(tailTex);
@@ -78,45 +68,29 @@ public class GameScreen extends ScreenAdapter {
         int gridWidth = (int) (V_WIDTH / GameSettings.TILE_SIZE);
         int gridHeight = (int) (V_HEIGHT / GameSettings.TILE_SIZE);
 
-        WorldBounds bounds = new WorldBounds(gridWidth, gridHeight); // MEXI AQUI
+        WorldBounds bounds = new WorldBounds(gridWidth, gridHeight); 
 
         int spawnY = gridHeight / 2;
 
-        // Initialize Player 1 on the left, facing right (White color = original sprite
-        // colors)
         player1 = new Snake(5, spawnY, Color.WHITE, bounds, Snake.Direction.RIGHT);
-
-        // Initialize Player 2 on the right, facing left (Light Blue tint to
-        // differentiate)
         player2 = new Snake(gridWidth - 5, spawnY, new Color(0.5f, 0.7f, 1f, 1f), bounds, Snake.Direction.LEFT);
 
         apple = new Food(gridWidth, gridHeight);
 
-        // MODIFIED: Initialize SoundManager and play background music
         soundManager = new SoundManager();
-        soundManager.playBackgroundMusic("GameMusic.WAV"); // Ensure this file is in your assets folder
+        soundManager.playBackgroundMusic("GameMusic.WAV"); 
     }
 
     private void handleInput() {
-        // Player 1 Controls (Arrow Keys)
-        if (Gdx.input.isKeyPressed(Input.Keys.UP))
-            player1.setDirection(Snake.Direction.UP);
-        else if (Gdx.input.isKeyPressed(Input.Keys.DOWN))
-            player1.setDirection(Snake.Direction.DOWN);
-        else if (Gdx.input.isKeyPressed(Input.Keys.LEFT))
-            player1.setDirection(Snake.Direction.LEFT);
-        else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT))
-            player1.setDirection(Snake.Direction.RIGHT);
+        if (Gdx.input.isKeyPressed(Input.Keys.UP)) player1.setDirection(Snake.Direction.UP);
+        else if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) player1.setDirection(Snake.Direction.DOWN);
+        else if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) player1.setDirection(Snake.Direction.LEFT);
+        else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) player1.setDirection(Snake.Direction.RIGHT);
 
-        // Player 2 Controls (W, A, S, D)
-        if (Gdx.input.isKeyPressed(Input.Keys.W))
-            player2.setDirection(Snake.Direction.UP);
-        else if (Gdx.input.isKeyPressed(Input.Keys.S))
-            player2.setDirection(Snake.Direction.DOWN);
-        else if (Gdx.input.isKeyPressed(Input.Keys.A))
-            player2.setDirection(Snake.Direction.LEFT);
-        else if (Gdx.input.isKeyPressed(Input.Keys.D))
-            player2.setDirection(Snake.Direction.RIGHT);
+        if (Gdx.input.isKeyPressed(Input.Keys.W)) player2.setDirection(Snake.Direction.UP);
+        else if (Gdx.input.isKeyPressed(Input.Keys.S)) player2.setDirection(Snake.Direction.DOWN);
+        else if (Gdx.input.isKeyPressed(Input.Keys.A)) player2.setDirection(Snake.Direction.LEFT);
+        else if (Gdx.input.isKeyPressed(Input.Keys.D)) player2.setDirection(Snake.Direction.RIGHT);
     }
 
     @Override
@@ -129,66 +103,61 @@ public class GameScreen extends ScreenAdapter {
         handleInput();
 
         if (!pauseMenu.isPaused()) {
-            // --- GAME STATE CHECK ---
-            // Only update the game logic if BOTH snakes are alive
             if (!player1.isDead() && !player2.isDead()) {
 
                 player1.update(delta);
                 player2.update(delta);
-                
-                // MODIFIED: Crucial update for the apple timers
                 apple.update(delta);
 
                 // --- CROSS-COLLISION CHECK ---
                 Snake.SnakeSegment p1Head = player1.getBody().getFirst();
                 Snake.SnakeSegment p2Head = player2.getBody().getFirst();
 
-                // Head-to-Head collision (Tie: both die)
                 if (p1Head.x == p2Head.x && p1Head.y == p2Head.y) {
                     player1.kill();
                     player2.kill();
                 } else {
-                    // Did Player 1 hit Player 2's body?
                     for (Snake.SnakeSegment segment : player2.getBody()) {
-                        if (p1Head.x == segment.x && p1Head.y == segment.y)
-                            player1.kill();
+                        if (p1Head.x == segment.x && p1Head.y == segment.y) player1.kill();
                     }
-                    // Did Player 2 hit Player 1's body?
                     for (Snake.SnakeSegment segment : player1.getBody()) {
-                        if (p2Head.x == segment.x && p2Head.y == segment.y)
-                            player2.kill();
+                        if (p2Head.x == segment.x && p2Head.y == segment.y) player2.kill();
                     }
                 }
 
                 // --- FOOD COLLISION ---
                 if (!player1.isDead()) {
                     if (p1Head.x == apple.getX() && p1Head.y == apple.getY()) {
-                        // MODIFIED: Replaced eat() with modifySize(), added dynamic score and sound
                         soundManager.playBiteSound("AppleBite.WAV");
                         player1.modifySize(apple.getSizeChange());
-                        scoreP1 += apple.getPoints();
                         
-                        spawnNewApple(); // MODIFIED: Abstracted respawn logic
-                        System.out.println("Player 1 Score: " + scoreP1);
+                        // MODIFIED: Locks score at 0 minimum
+                        scoreP1 += apple.getPoints();
+                        if (scoreP1 < 0) scoreP1 = 0;
+                        
+                        spawnNewApple(); 
                     }
                 }
 
                 if (!player2.isDead()) {
                     if (p2Head.x == apple.getX() && p2Head.y == apple.getY()) {
-                        // MODIFIED: Replaced eat() with modifySize(), added dynamic score and sound
                         soundManager.playBiteSound("AppleBite.WAV");
                         player2.modifySize(apple.getSizeChange());
-                        scoreP2 += apple.getPoints();
                         
-                        spawnNewApple(); // MODIFIED: Abstracted respawn logic
-                        System.out.println("Player 2 Score: " + scoreP2);
+                        // MODIFIED: Locks score at 0 minimum
+                        scoreP2 += apple.getPoints();
+                        if (scoreP2 < 0) scoreP2 = 0;
+                        
+                        spawnNewApple(); 
                     }
                 }
 
             } else {
                 // --- GAME OVER STATE ---
-                // MODIFIED: Stop the music before switching screens
                 soundManager.stopBackgroundMusic();
+                
+                // MODIFIED: Plays the death sound right as the Game Over triggers
+                soundManager.playDeathSound("Death.WAV");
                 
                 game.setScreen(new GameOverScreen(game, scoreP1, scoreP2));
                 dispose();
@@ -207,37 +176,25 @@ public class GameScreen extends ScreenAdapter {
         int gridWidth = (int) (V_WIDTH / GameSettings.TILE_SIZE);
         int gridHeight = (int) (V_HEIGHT / GameSettings.TILE_SIZE);
 
-        // Draw the tiled background grid with a checkerboard pattern
         for (int x = 0; x < gridWidth; x++) {
             for (int y = 0; y < gridHeight; y++) {
                 if ((x + y) % 2 == 0) {
-                    batch.draw(tileTex1, x * GameSettings.TILE_SIZE, y * GameSettings.TILE_SIZE, GameSettings.TILE_SIZE,
-                            GameSettings.TILE_SIZE);
+                    batch.draw(tileTex1, x * GameSettings.TILE_SIZE, y * GameSettings.TILE_SIZE, GameSettings.TILE_SIZE, GameSettings.TILE_SIZE);
                 } else {
-                    batch.draw(tileTex2, x * GameSettings.TILE_SIZE, y * GameSettings.TILE_SIZE, GameSettings.TILE_SIZE,
-                            GameSettings.TILE_SIZE);
+                    batch.draw(tileTex2, x * GameSettings.TILE_SIZE, y * GameSettings.TILE_SIZE, GameSettings.TILE_SIZE, GameSettings.TILE_SIZE);
                 }
             }
         }
 
-        // MODIFIED: Color the apple based on its specific type
         switch (apple.getType()) {
-            case GOLDEN:
-                batch.setColor(Color.YELLOW);
-                break;
-            case ROTTEN:
-                batch.setColor(Color.BROWN);
-                break;
+            case GOLDEN: batch.setColor(Color.YELLOW); break;
+            case ROTTEN: batch.setColor(Color.BROWN); break;
             case NORMAL:
-            default:
-                batch.setColor(Color.WHITE); // Assuming default fruit.png is reddish
-                break;
+            default: batch.setColor(Color.WHITE); break;
         }
 
-        batch.draw(fruitTex, apple.getX() * GameSettings.TILE_SIZE, apple.getY() * GameSettings.TILE_SIZE,
-                GameSettings.TILE_SIZE, GameSettings.TILE_SIZE);
-
-        batch.setColor(Color.WHITE); // MODIFIED: Reset batch color after drawing the food
+        batch.draw(fruitTex, apple.getX() * GameSettings.TILE_SIZE, apple.getY() * GameSettings.TILE_SIZE, GameSettings.TILE_SIZE, GameSettings.TILE_SIZE);
+        batch.setColor(Color.WHITE); 
 
         drawSnake(player1);
         drawSnake(player2);
@@ -247,25 +204,22 @@ public class GameScreen extends ScreenAdapter {
         batch.end();
 
         if (wantsToQuit) {
-            soundManager.stopBackgroundMusic(); // MODIFIED: Stop music if quitting
+            soundManager.stopBackgroundMusic(); 
             game.setScreen(new MainMenuScreen(game));
             dispose();
         }
     }
 
-    // MODIFIED: New helper method to handle the random chances of apple drops
     private void spawnNewApple() {
         int chance = new java.util.Random().nextInt(100);
         if (chance < 10) {
-            apple.respawnAs(Food.AppleType.GOLDEN); // 10% chance
+            apple.respawnAs(Food.AppleType.GOLDEN); 
         } else if (chance < 30) {
-            apple.respawnAs(Food.AppleType.ROTTEN); // 20% chance
+            apple.respawnAs(Food.AppleType.ROTTEN); 
         } else {
-            apple.respawn(); // 70% chance
+            apple.respawn(); 
         }
     }
-
-    // --- ROTATION HELPER METHODS ---
 
     private float getDirectionRotation(Snake.SnakeSegment from, Snake.SnakeSegment to) {
         if (to.x > from.x) return 0f; 
@@ -291,8 +245,8 @@ public class GameScreen extends ScreenAdapter {
 
     private void drawSnake(Snake player) {
         batch.setColor(player.getColor());
-
         LinkedList<Snake.SnakeSegment> body = player.getBody();
+        
         for (int i = 0; i < body.size(); i++) {
             Snake.SnakeSegment segment = body.get(i);
             float drawX = segment.x * GameSettings.TILE_SIZE;
@@ -304,12 +258,22 @@ public class GameScreen extends ScreenAdapter {
             if (i == 0) {
                 regionToDraw = headRegion;
                 Snake.SnakeSegment head = body.get(0);
-                Snake.SnakeSegment next = body.get(1);
-
-                if (next.x > head.x) rotation = 180f;
-                else if (next.x < head.x) rotation = 0f;
-                else if (next.y > head.y) rotation = 270f;
-                else rotation = 90f;
+                
+                // MODIFIED: Fixes rendering crash when snake size is 1
+                if (body.size() > 1) {
+                    Snake.SnakeSegment next = body.get(1);
+                    if (next.x > head.x) rotation = 180f;
+                    else if (next.x < head.x) rotation = 0f;
+                    else if (next.y > head.y) rotation = 270f;
+                    else rotation = 90f;
+                } else {
+                    switch (player.getCurrentDirection()) {
+                        case RIGHT: rotation = 0f; break;
+                        case LEFT:  rotation = 180f; break;
+                        case UP:    rotation = 90f; break;
+                        case DOWN:  rotation = 270f; break;
+                    }
+                }
 
             } else if (i == body.size() - 1) {
                 regionToDraw = tailRegion;
@@ -331,12 +295,8 @@ public class GameScreen extends ScreenAdapter {
                 }
             }
 
-            batch.draw(regionToDraw,
-                    drawX, drawY,
-                    GameSettings.TILE_SIZE / 2f, GameSettings.TILE_SIZE / 2f,
-                    GameSettings.TILE_SIZE, GameSettings.TILE_SIZE,
-                    1f, 1f,
-                    rotation);
+            batch.draw(regionToDraw, drawX, drawY, GameSettings.TILE_SIZE / 2f, GameSettings.TILE_SIZE / 2f,
+                    GameSettings.TILE_SIZE, GameSettings.TILE_SIZE, 1f, 1f, rotation);
         }
     }
 

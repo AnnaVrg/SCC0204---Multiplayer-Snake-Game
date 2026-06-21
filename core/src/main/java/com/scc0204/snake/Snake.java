@@ -16,12 +16,8 @@ public class Snake extends Entity {
     private float moveTimer = 0;
     private float currentMoveTime = GameSettings.STARTING_SPEED; 
 
-    // REPLACED: Swapped 'justAte' boolean flag for an integer counter for pending segment changes
     private int pendingGrowth = 0;
-
     private boolean isDead = false;
-
-    // World Boundaries
     private WorldBounds bounds; 
 
     public enum Direction {
@@ -98,29 +94,25 @@ public class Snake extends Entity {
 
         body.addFirst(new SnakeSegment(nextX, nextY));
 
-        // NEW GROWTH/SHRINK LOGIC: Processing the growth/shrink queue
         if (pendingGrowth > 0) {
             pendingGrowth--;
         } else if (pendingGrowth < 0) {
             body.removeLast();
             if (body.size() > 1) { 
                 body.removeLast();
+                pendingGrowth++;
             } else {
-                this.isDead = true; 
+                // MODIFIED: Prevent death when shrinking. Caps size at 1 (head only)
+                // and clears the queue so negative growth doesn't stack indefinitely.
+                this.pendingGrowth = 0; 
             }
-            pendingGrowth++;
         } else {
             body.removeLast();
         }
     }
 
-    /**
-     * Handles dynamic snake sizing when special food is consumed.
-     * Replaces the old 'eat()' method.
-     */
     public void modifySize(int sizeChange) {
         this.pendingGrowth += sizeChange;
-
         if (sizeChange > 0 && this.currentMoveTime > 0.05f) {
             this.currentMoveTime -= 0.005f;
         }

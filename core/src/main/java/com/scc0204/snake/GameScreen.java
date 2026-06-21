@@ -94,7 +94,7 @@ public class GameScreen extends ScreenAdapter {
 
         // MODIFIED: Initialize SoundManager and play background music
         soundManager = new SoundManager();
-        soundManager.playBackgroundMusic("bgm.wav"); // Ensure this file is in your assets folder
+        soundManager.playBackgroundMusic("GameMusic.WAV"); // Ensure this file is in your assets folder
     }
 
     private void handleInput() {

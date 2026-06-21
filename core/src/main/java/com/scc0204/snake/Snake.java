@@ -21,7 +21,10 @@ public class Snake extends Entity {
     // Flag to check if the snake just consumed food
     private boolean justAte = false;
 
-    // World Boundaries 
+    // Flag to check if the snake has collided with itself
+    private boolean isDead = false;
+
+    // World Boundaries
     private WorldBounds bounds; // MEXI AQUII ANNNA
 
     public enum Direction {
@@ -40,14 +43,30 @@ public class Snake extends Entity {
         }
     }
 
-    public Snake(int startX, int startY, Color color, WorldBounds bounds) {
+    public Snake(int startX, int startY, Color color, WorldBounds bounds, Direction startDir) {
         super(startX, startY);
         this.color = color;
         this.body = new LinkedList<>();
-        this.body.add(new SnakeSegment(startX, startY));
-        this.body.add(new SnakeSegment(startX - 1, startY));
-        this.currentDirection = Direction.RIGHT; // Default starting direction
         this.bounds = bounds; // MEXI AQUI ANNAAAA
+        this.body.add(new SnakeSegment(startX, startY));
+
+        // Position the initial tail based on the starting direction
+        switch (startDir) {
+            case RIGHT:
+                this.body.add(new SnakeSegment(startX - 1, startY));
+                break;
+            case LEFT:
+                this.body.add(new SnakeSegment(startX + 1, startY));
+                break;
+            case UP:
+                this.body.add(new SnakeSegment(startX, startY - 1));
+                break;
+            case DOWN:
+                this.body.add(new SnakeSegment(startX, startY + 1));
+                break;
+        }
+
+        this.currentDirection = startDir;
     }
 
     /**
@@ -69,6 +88,10 @@ public class Snake extends Entity {
 
     @Override
     public void update(float deltaTime) {
+
+        // Halt all logic if the snake is dead
+        if (isDead)
+            return;
         moveTimer += deltaTime;
 
         // Only trigger the movement logic when the timer reaches the threshold
@@ -107,6 +130,15 @@ public class Snake extends Entity {
         nextX = bounds.wrapX(nextX);
         nextY = bounds.wrapY(nextY);
 
+        // If the calculated next position matches any current body segment, the snake
+        // dies.
+        for (SnakeSegment segment : body) {
+            if (segment.x == nextX && segment.y == nextY) {
+                this.isDead = true;
+                return; // Interrupt the movement execution
+            }
+        }
+
         // Add the new segment at the calculated position (this becomes the new head)
         body.addFirst(new SnakeSegment(nextX, nextY));
 
@@ -132,6 +164,15 @@ public class Snake extends Entity {
         if (this.currentMoveTime > 0.05f) {
             this.currentMoveTime -= 0.005f;
         }
+    }
+
+    // Allows the GameScreen to explicitly kill this snake (e.g., cross-collision)
+    public void kill() {
+        this.isDead = true;
+    }
+
+    public boolean isDead() {
+        return isDead;
     }
 
     public LinkedList<SnakeSegment> getBody() {

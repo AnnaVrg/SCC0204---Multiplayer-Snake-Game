@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.ScreenUtils;
 import java.util.LinkedList;
+import com.badlogic.gdx.graphics.Color;
 
 /**
  * The main screen where the gameplay loop takes place.
@@ -15,6 +16,8 @@ import java.util.LinkedList;
  * rotations.
  */
 public class GameScreen extends ScreenAdapter {
+
+    private boolean gameOver = false;
     private SpriteBatch batch;
 
     // Textures to hold the .png files in memory
@@ -23,8 +26,12 @@ public class GameScreen extends ScreenAdapter {
     private TextureRegion headRegion, bodyRegion, tailRegion, cornerRegion;
 
     private Snake player1;
+    private Snake player2;
+
     private Food apple;
-    private int score = 0;
+
+    private int scoreP1 = 0;
+    private int scoreP2 = 0;
 
     // Scales the 16x16 art up to 32x32 visually on the screen
     private static final int TILE_SIZE = 32;
@@ -53,44 +60,118 @@ public class GameScreen extends ScreenAdapter {
 
         WorldBounds bounds = new WorldBounds(gridWidth, gridHeight); // MEXI AQUI
 
-        player1 = new Snake(10, 10, null, bounds); // AQUI TAMBÉM
+        // Initialize Player 1 on the left, facing right (White color = original sprite
+        // colors)
+        player1 = new Snake(5, 10, Color.WHITE, bounds, Snake.Direction.RIGHT);
+
+        // Initialize Player 2 on the right, facing left (Light Blue tint to
+        // differentiate)
+        player2 = new Snake(gridWidth - 5, 10, new Color(0.5f, 0.7f, 1f, 1f), bounds, Snake.Direction.LEFT);
 
         apple = new Food(gridWidth, gridHeight);
 
     }
 
     private void handleInput() {
-        if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
+        // Player 1 Controls (Arrow Keys)
+        if (Gdx.input.isKeyPressed(Input.Keys.UP))
             player1.setDirection(Snake.Direction.UP);
-        } else if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
+        else if (Gdx.input.isKeyPressed(Input.Keys.DOWN))
             player1.setDirection(Snake.Direction.DOWN);
-        } else if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
+        else if (Gdx.input.isKeyPressed(Input.Keys.LEFT))
             player1.setDirection(Snake.Direction.LEFT);
-        } else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
+        else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT))
             player1.setDirection(Snake.Direction.RIGHT);
-        }
+
+        // Player 2 Controls (W, A, S, D)
+        if (Gdx.input.isKeyPressed(Input.Keys.W))
+            player2.setDirection(Snake.Direction.UP);
+        else if (Gdx.input.isKeyPressed(Input.Keys.S))
+            player2.setDirection(Snake.Direction.DOWN);
+        else if (Gdx.input.isKeyPressed(Input.Keys.A))
+            player2.setDirection(Snake.Direction.LEFT);
+        else if (Gdx.input.isKeyPressed(Input.Keys.D))
+            player2.setDirection(Snake.Direction.RIGHT);
     }
 
     @Override
     public void render(float delta) {
-        // Process user input
         handleInput();
 
-        // Update game logic
-        player1.update(delta);
+        // --- GAME STATE CHECK ---
+        // Only update the game logic if BOTH snakes are alive
+        if (!player1.isDead() && !player2.isDead()) {
 
-        // Check Food Collision
-        Snake.SnakeSegment head = player1.getBody().getFirst();
-        if (head.x == apple.getX() && head.y == apple.getY()) {
-            player1.eat();
-            apple.respawn();
-            score++;
-            System.out.println("Score Player 1: " + score);
+            player1.update(delta);
+            player2.update(delta);
+
+            // --- CROSS-COLLISION CHECK ---
+            Snake.SnakeSegment p1Head = player1.getBody().getFirst();
+            Snake.SnakeSegment p2Head = player2.getBody().getFirst();
+
+            // Head-to-Head collision (Tie: both die)
+            if (p1Head.x == p2Head.x && p1Head.y == p2Head.y) {
+                player1.kill();
+                player2.kill();
+            } else {
+                // Did Player 1 hit Player 2's body?
+                for (Snake.SnakeSegment segment : player2.getBody()) {
+                    if (p1Head.x == segment.x && p1Head.y == segment.y)
+                        player1.kill();
+                }
+                // Did Player 2 hit Player 1's body?
+                for (Snake.SnakeSegment segment : player1.getBody()) {
+                    if (p2Head.x == segment.x && p2Head.y == segment.y)
+                        player2.kill();
+                }
+            }
+
+            // --- FOOD COLLISION ---
+            if (!player1.isDead()) {
+                if (p1Head.x == apple.getX() && p1Head.y == apple.getY()) {
+                    player1.eat();
+                    apple.respawn();
+                    scoreP1++;
+                    System.out.println("Player 1 Score: " + scoreP1);
+                }
+            }
+
+            if (!player2.isDead()) {
+                if (p2Head.x == apple.getX() && p2Head.y == apple.getY()) {
+                    player2.eat();
+                    apple.respawn();
+                    scoreP2++;
+                    System.out.println("Player 2 Score: " + scoreP2);
+                }
+            }
+
+        } else {
+            // --- GAME OVER STATE ---
+            // If we enter here, at least one snake has died.
+            // We run this block only once using the gameOver flag to prevent console spam.
+            if (!gameOver) {
+                gameOver = true;
+                System.out.println("\n--- GAME OVER ---");
+                System.out.println("Final Score - Player 1: " + scoreP1);
+                System.out.println("Final Score - Player 2: " + scoreP2);
+
+                // Determine the winner based strictly on the score
+                if (scoreP1 > scoreP2) {
+                    System.out.println("RESULT: Player 1 Wins!");
+                } else if (scoreP2 > scoreP1) {
+                    System.out.println("RESULT: Player 2 Wins!");
+                } else {
+                    System.out.println("RESULT: It's a Tie!");
+                }
+            }
         }
 
         // --- RENDERING ---
+        // Rendering continues so we can see the frozen game state
         ScreenUtils.clear(0, 0, 0, 1);
         batch.begin();
+
+        batch.setColor(Color.WHITE);
 
         int gridWidth = Gdx.graphics.getWidth() / TILE_SIZE;
         int gridHeight = Gdx.graphics.getHeight() / TILE_SIZE;
@@ -98,77 +179,22 @@ public class GameScreen extends ScreenAdapter {
         // Draw the tiled background grid with a checkerboard pattern
         for (int x = 0; x < gridWidth; x++) {
             for (int y = 0; y < gridHeight; y++) {
-
-                // Alternate colors based on even/odd sum of coordinates
                 if ((x + y) % 2 == 0) {
-                    // Normal color (White tint = original pixel art colors)
                     batch.draw(tileTex1, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                 } else {
-                    // Slightly darker tint to create the checkerboard contrast
                     batch.draw(tileTex2, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                 }
-
             }
         }
 
-        // Reset the batch color back to pure white before drawing the fruit and the
-        // snake
         batch.setColor(1f, 1f, 1f, 1f);
-
-        // Draw the fruit
         batch.draw(fruitTex, apple.getX() * TILE_SIZE, apple.getY() * TILE_SIZE, TILE_SIZE, TILE_SIZE);
 
-        // Draw the Snake
-        LinkedList<Snake.SnakeSegment> body = player1.getBody();
-        for (int i = 0; i < body.size(); i++) {
-            Snake.SnakeSegment segment = body.get(i);
-            float drawX = segment.x * TILE_SIZE;
-            float drawY = segment.y * TILE_SIZE;
-
-            TextureRegion regionToDraw;
-            float rotation = 0f;
-
-            if (i == 0) {
-                // HEAD: Rotation is purely based on the current direction of the snake
-                regionToDraw = headRegion;
-                rotation = getHeadRotation(player1.getCurrentDirection());
-            } else if (i == body.size() - 1) {
-                // TAIL: Looks at the segment immediately in front of it
-                regionToDraw = tailRegion;
-                Snake.SnakeSegment front = body.get(i - 1);
-                rotation = getDirectionRotation(segment, front);
-            } else {
-                // MIDDLE BODY OR CORNER: Looks at the segment in front and behind
-                Snake.SnakeSegment front = body.get(i - 1);
-                Snake.SnakeSegment back = body.get(i + 1);
-
-                if (front.x == back.x) {
-                    // Vertical straight line
-                    regionToDraw = bodyRegion;
-                    rotation = 90f;
-                } else if (front.y == back.y) {
-                    // Horizontal straight line
-                    regionToDraw = bodyRegion;
-                    rotation = 0f;
-                } else {
-                    // It's a corner, calculate the specific bend
-                    regionToDraw = cornerRegion;
-                    rotation = getCornerRotation(front, segment, back);
-                }
-            }
-
-            // Draw the specific region rotated around its center point
-            batch.draw(regionToDraw,
-                    drawX, drawY,
-                    TILE_SIZE / 2f, TILE_SIZE / 2f, // Origin X and Y for rotation
-                    TILE_SIZE, TILE_SIZE,
-                    1f, 1f, // Scale X and Y
-                    rotation);
-        }
+        drawSnake(player1);
+        drawSnake(player2);
 
         batch.end();
     }
-
     // --- ROTATION HELPER METHODS ---
 
     /**
@@ -225,6 +251,55 @@ public class GameScreen extends ScreenAdapter {
             return 90f;
 
         return 0f;
+    }
+
+    /**
+     * Helper method to render a snake.
+     * Applies the snake's specific color tint to differentiate players.
+     */
+    private void drawSnake(Snake player) {
+        // Tints the pixel art based on the player's color
+        batch.setColor(player.getColor());
+
+        LinkedList<Snake.SnakeSegment> body = player.getBody();
+        for (int i = 0; i < body.size(); i++) {
+            Snake.SnakeSegment segment = body.get(i);
+            float drawX = segment.x * TILE_SIZE;
+            float drawY = segment.y * TILE_SIZE;
+
+            TextureRegion regionToDraw;
+            float rotation = 0f;
+
+            if (i == 0) {
+                regionToDraw = headRegion;
+                rotation = getHeadRotation(player.getCurrentDirection());
+            } else if (i == body.size() - 1) {
+                regionToDraw = tailRegion;
+                Snake.SnakeSegment front = body.get(i - 1);
+                rotation = getDirectionRotation(segment, front);
+            } else {
+                Snake.SnakeSegment front = body.get(i - 1);
+                Snake.SnakeSegment back = body.get(i + 1);
+
+                if (front.x == back.x) {
+                    regionToDraw = bodyRegion;
+                    rotation = 90f;
+                } else if (front.y == back.y) {
+                    regionToDraw = bodyRegion;
+                    rotation = 0f;
+                } else {
+                    regionToDraw = cornerRegion;
+                    rotation = getCornerRotation(front, segment, back);
+                }
+            }
+
+            batch.draw(regionToDraw,
+                    drawX, drawY,
+                    TILE_SIZE / 2f, TILE_SIZE / 2f,
+                    TILE_SIZE, TILE_SIZE,
+                    1f, 1f,
+                    rotation);
+        }
     }
 
     @Override

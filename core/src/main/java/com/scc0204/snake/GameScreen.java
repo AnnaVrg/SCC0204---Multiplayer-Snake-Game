@@ -33,6 +33,8 @@ public class GameScreen extends ScreenAdapter {
     private int scoreP1 = 0;
     private int scoreP2 = 0;
 
+    private ScoreBoard scoreBoard;
+
     // Scales the 16x16 art up to 32x32 visually on the screen
     private static final int TILE_SIZE = 32;
 
@@ -53,6 +55,8 @@ public class GameScreen extends ScreenAdapter {
         bodyRegion = new TextureRegion(bodyTex);
         tailRegion = new TextureRegion(tailTex);
         cornerRegion = new TextureRegion(cornerTex);
+
+        scoreBoard = new ScoreBoard();
 
         // Initialize Player 1 (Color is kept for structural compatibility)
         int gridWidth = Gdx.graphics.getWidth() / TILE_SIZE;
@@ -192,6 +196,7 @@ public class GameScreen extends ScreenAdapter {
 
         drawSnake(player1);
         drawSnake(player2);
+        scoreBoard.draw(batch, scoreP1, scoreP2, gameOver);
 
         batch.end();
     }
@@ -313,5 +318,6 @@ public class GameScreen extends ScreenAdapter {
         fruitTex.dispose();
         tileTex1.dispose();
         tileTex2.dispose();
+        scoreBoard.dispose();
     }
 }

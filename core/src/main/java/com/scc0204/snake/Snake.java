@@ -16,7 +16,7 @@ public class Snake extends Entity {
 
     // Timer to control movement speed (grid-based movement, not pixel-by-pixel)
     private float moveTimer = 0;
-    private float currentMoveTime = 0.15f; // Start at default speed
+    private float currentMoveTime = GameSettings.STARTING_SPEED; // Start at default speed
 
     // Flag to check if the snake just consumed food
     private boolean justAte = false;

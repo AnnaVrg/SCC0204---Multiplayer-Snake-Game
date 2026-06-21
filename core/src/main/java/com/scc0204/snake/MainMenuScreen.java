@@ -65,17 +65,20 @@ public class MainMenuScreen implements Screen {
         String opt1 = "[1] New Game";
         String opt2 = "[2] High Scores";
         String opt3 = "[3] Instructions";
-        String opt4 = "[4] Exit";
+        String opt4 = "[4] Settings";
+        String opt5 = "[5] Exit";
 
         // Aligning everything to the center
         fontPrompt.draw(game.batch, opt1, (GameScreen.V_WIDTH - new GlyphLayout(fontPrompt, opt1).width) / 2f,
-                GameScreen.V_HEIGHT / 2.5f);
+                GameScreen.V_HEIGHT / 2.5f + 20);
         fontPrompt.draw(game.batch, opt2, (GameScreen.V_WIDTH - new GlyphLayout(fontPrompt, opt2).width) / 2f,
-                GameScreen.V_HEIGHT / 2.5f - 60);
+                GameScreen.V_HEIGHT / 2.5f - 40);
         fontPrompt.draw(game.batch, opt3, (GameScreen.V_WIDTH - new GlyphLayout(fontPrompt, opt3).width) / 2f,
-                GameScreen.V_HEIGHT / 2.5f - 120);
+                GameScreen.V_HEIGHT / 2.5f - 100);
         fontPrompt.draw(game.batch, opt4, (GameScreen.V_WIDTH - new GlyphLayout(fontPrompt, opt4).width) / 2f,
-                GameScreen.V_HEIGHT / 2.5f - 180);
+                GameScreen.V_HEIGHT / 2.5f - 160);
+        fontPrompt.draw(game.batch, opt5, (GameScreen.V_WIDTH - new GlyphLayout(fontPrompt, opt5).width) / 2f,
+                GameScreen.V_HEIGHT / 2.5f - 220);
 
         game.batch.end();
 
@@ -90,7 +93,10 @@ public class MainMenuScreen implements Screen {
             game.setScreen(new InstructionsScreen(game));
             dispose();
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_4) || Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_4)) {
-            Gdx.app.exit(); // Closes the application
+            game.setScreen(new SettingsScreen(game));
+            dispose();
+        } else if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_5) || Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_5)) {
+            Gdx.app.exit();
         }
     }
 

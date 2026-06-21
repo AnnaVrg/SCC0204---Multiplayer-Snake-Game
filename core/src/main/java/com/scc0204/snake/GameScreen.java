@@ -45,7 +45,6 @@ public class GameScreen extends ScreenAdapter {
     private ScoreBoard scoreBoard;
 
     // Scales the 16x16 art up to 32x32 visually on the screen
-    private static final int TILE_SIZE = 32;
 
     public GameScreen(SnakeGame game) {
         this.game = game;
@@ -71,18 +70,20 @@ public class GameScreen extends ScreenAdapter {
 
         scoreBoard = new ScoreBoard();
 
-        int gridWidth = (int) (V_WIDTH / TILE_SIZE);
-        int gridHeight = (int) (V_HEIGHT / TILE_SIZE);
+        int gridWidth = (int) (V_WIDTH / GameSettings.TILE_SIZE);
+        int gridHeight = (int) (V_HEIGHT / GameSettings.TILE_SIZE);
 
         WorldBounds bounds = new WorldBounds(gridWidth, gridHeight); // MEXI AQUI
 
+        int spawnY = gridHeight / 2;
+
         // Initialize Player 1 on the left, facing right (White color = original sprite
         // colors)
-        player1 = new Snake(5, 10, Color.WHITE, bounds, Snake.Direction.RIGHT);
+        player1 = new Snake(5, spawnY, Color.WHITE, bounds, Snake.Direction.RIGHT);
 
         // Initialize Player 2 on the right, facing left (Light Blue tint to
         // differentiate)
-        player2 = new Snake(gridWidth - 5, 10, new Color(0.5f, 0.7f, 1f, 1f), bounds, Snake.Direction.LEFT);
+        player2 = new Snake(gridWidth - 5, spawnY, new Color(0.5f, 0.7f, 1f, 1f), bounds, Snake.Direction.LEFT);
 
         apple = new Food(gridWidth, gridHeight);
 
@@ -186,22 +187,25 @@ public class GameScreen extends ScreenAdapter {
 
         batch.setColor(Color.WHITE);
 
-        int gridWidth = (int) (V_WIDTH / TILE_SIZE);
-        int gridHeight = (int) (V_HEIGHT / TILE_SIZE);
+        int gridWidth = (int) (V_WIDTH / GameSettings.TILE_SIZE);
+        int gridHeight = (int) (V_HEIGHT / GameSettings.TILE_SIZE);
 
         // Draw the tiled background grid with a checkerboard pattern
         for (int x = 0; x < gridWidth; x++) {
             for (int y = 0; y < gridHeight; y++) {
                 if ((x + y) % 2 == 0) {
-                    batch.draw(tileTex1, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                    batch.draw(tileTex1, x * GameSettings.TILE_SIZE, y * GameSettings.TILE_SIZE, GameSettings.TILE_SIZE,
+                            GameSettings.TILE_SIZE);
                 } else {
-                    batch.draw(tileTex2, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                    batch.draw(tileTex2, x * GameSettings.TILE_SIZE, y * GameSettings.TILE_SIZE, GameSettings.TILE_SIZE,
+                            GameSettings.TILE_SIZE);
                 }
             }
         }
 
         batch.setColor(1f, 1f, 1f, 1f);
-        batch.draw(fruitTex, apple.getX() * TILE_SIZE, apple.getY() * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        batch.draw(fruitTex, apple.getX() * GameSettings.TILE_SIZE, apple.getY() * GameSettings.TILE_SIZE,
+                GameSettings.TILE_SIZE, GameSettings.TILE_SIZE);
 
         drawSnake(player1);
         drawSnake(player2);
@@ -265,8 +269,8 @@ public class GameScreen extends ScreenAdapter {
         LinkedList<Snake.SnakeSegment> body = player.getBody();
         for (int i = 0; i < body.size(); i++) {
             Snake.SnakeSegment segment = body.get(i);
-            float drawX = segment.x * TILE_SIZE;
-            float drawY = segment.y * TILE_SIZE;
+            float drawX = segment.x * GameSettings.TILE_SIZE;
+            float drawY = segment.y * GameSettings.TILE_SIZE;
 
             TextureRegion regionToDraw;
             float rotation = 0f;
@@ -307,8 +311,8 @@ public class GameScreen extends ScreenAdapter {
 
             batch.draw(regionToDraw,
                     drawX, drawY,
-                    TILE_SIZE / 2f, TILE_SIZE / 2f,
-                    TILE_SIZE, TILE_SIZE,
+                    GameSettings.TILE_SIZE / 2f, GameSettings.TILE_SIZE / 2f,
+                    GameSettings.TILE_SIZE, GameSettings.TILE_SIZE,
                     1f, 1f,
                     rotation);
         }

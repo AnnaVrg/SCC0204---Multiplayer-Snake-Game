@@ -48,11 +48,15 @@ public class GameScreen extends ScreenAdapter {
         cornerRegion = new TextureRegion(cornerTex);
 
         // Initialize Player 1 (Color is kept for structural compatibility)
-        player1 = new Snake(10, 10, null);
-
         int gridWidth = Gdx.graphics.getWidth() / TILE_SIZE;
         int gridHeight = Gdx.graphics.getHeight() / TILE_SIZE;
+
+        WorldBounds bounds = new WorldBounds(gridWidth, gridHeight); // MEXI AQUI
+
+        player1 = new Snake(10, 10, null, bounds); // AQUI TAMBÉM
+
         apple = new Food(gridWidth, gridHeight);
+
     }
 
     private void handleInput() {

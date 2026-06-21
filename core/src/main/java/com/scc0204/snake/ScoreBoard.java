@@ -37,7 +37,7 @@ public class ScoreBoard {
     /**
      * Draws the current scores and the end-game state if applicable.
      */
-    public void draw(SpriteBatch batch, int scoreP1, int scoreP2, boolean gameOver) {
+    public void draw(SpriteBatch batch, int scoreP1, int scoreP2) {
         float screenWidth = GameScreen.V_WIDTH;
         float screenHeight = GameScreen.V_HEIGHT;
 
@@ -55,38 +55,6 @@ public class ScoreBoard {
         float p2X = screenWidth - p2Layout.width - 20;
         font.draw(batch, p2Text, p2X, screenHeight - 20);
 
-        // --- GAME OVER OVERLAY (Perfectly Centered) ---
-        if (gameOver) {
-            float centerX = screenWidth / 2f;
-            float centerY = screenHeight / 2f;
-
-            // MAIN TITLE: GAME OVER
-            font.setColor(Color.WHITE);
-            font.getData().setScale(2.5f);
-            String overText = "GAME OVER";
-            GlyphLayout overLayout = new GlyphLayout(font, overText);
-            // Perfectly center the text by subtracting half of its exact mathematical width
-            font.draw(batch, overText, centerX - (overLayout.width / 2f), centerY + 50);
-
-            // SUBTITLE: WINNER ANNOUNCEMENT
-            font.setColor(Color.WHITE);
-            font.getData().setScale(1.5f);
-
-            String winnerText;
-            if (scoreP1 > scoreP2)
-                winnerText = "PLAYER 1 WINS!";
-            else if (scoreP2 > scoreP1)
-                winnerText = "PLAYER 2 WINS!";
-            else
-                winnerText = "IT'S A TIE!";
-
-            GlyphLayout winnerLayout = new GlyphLayout(font, winnerText);
-            // Center the subtitle exactly below the main title
-            font.draw(batch, winnerText, centerX - (winnerLayout.width / 2f), centerY - 10);
-
-            // Reset the scale back to default so the scores aren't huge on the next frame
-            font.getData().setScale(1f);
-        }
     }
 
     /**

@@ -20,13 +20,13 @@ import com.badlogic.gdx.utils.viewport.Viewport;
  */
 public class GameScreen extends ScreenAdapter {
 
+    private final SnakeGame game;
     public static final float V_WIDTH = 800;
     public static final float V_HEIGHT = 640;
 
     private OrthographicCamera camera;
     private Viewport viewport;
 
-    private boolean gameOver = false;
     private SpriteBatch batch;
 
     // Textures to hold the .png files in memory
@@ -47,8 +47,9 @@ public class GameScreen extends ScreenAdapter {
     // Scales the 16x16 art up to 32x32 visually on the screen
     private static final int TILE_SIZE = 32;
 
-    public GameScreen() {
-        batch = new SpriteBatch();
+    public GameScreen(SnakeGame game) {
+        this.game = game;
+        this.batch = game.batch;
 
         camera = new OrthographicCamera();
         viewport = new FitViewport(V_WIDTH, V_HEIGHT, camera);
@@ -163,22 +164,15 @@ public class GameScreen extends ScreenAdapter {
         } else {
             // --- GAME OVER STATE ---
             // If we enter here, at least one snake has died.
-            // We run this block only once using the gameOver flag to prevent console spam.
-            if (!gameOver) {
-                gameOver = true;
-                System.out.println("\n--- GAME OVER ---");
-                System.out.println("Final Score - Player 1: " + scoreP1);
-                System.out.println("Final Score - Player 2: " + scoreP2);
 
-                // Determine the winner based strictly on the score
-                if (scoreP1 > scoreP2) {
-                    System.out.println("RESULT: Player 1 Wins!");
-                } else if (scoreP2 > scoreP1) {
-                    System.out.println("RESULT: Player 2 Wins!");
-                } else {
-                    System.out.println("RESULT: It's a Tie!");
-                }
-            }
+            // Instantly transition to the GameOverScreen and pass the scores
+            game.setScreen(new GameOverScreen(game, scoreP1, scoreP2));
+
+            // Clean up the game screen from memory
+            dispose();
+
+            // Stop running the rest of the render method for this frame
+            return;
         }
 
         // --- RENDERING ---
@@ -211,7 +205,7 @@ public class GameScreen extends ScreenAdapter {
 
         drawSnake(player1);
         drawSnake(player2);
-        scoreBoard.draw(batch, scoreP1, scoreP2, gameOver);
+        scoreBoard.draw(batch, scoreP1, scoreP2);
 
         batch.end();
     }
@@ -332,7 +326,6 @@ public class GameScreen extends ScreenAdapter {
     @Override
     public void dispose() {
         // ALWAYS clean up textures to prevent VRAM memory leaks
-        batch.dispose();
         headTex.dispose();
         bodyTex.dispose();
         tailTex.dispose();

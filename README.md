@@ -292,6 +292,8 @@ BUILD SUCCESSFUL in 1.2s
 ```
 Além da confirmação via terminal, o Gradle gera um relatório detalhado em HTML em: core/build/reports/tests/test/index.html.
 
+---
+
 # 🛠️ Como Compilar e Executar o Jogo
 
 Siga os passos abaixo para baixar, compilar e executar o projeto diretamente na sua máquina local:

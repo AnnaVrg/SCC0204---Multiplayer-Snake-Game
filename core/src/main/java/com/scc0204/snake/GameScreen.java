@@ -9,6 +9,9 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.ScreenUtils;
 import java.util.LinkedList;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 
 /**
  * The main screen where the gameplay loop takes place.
@@ -16,6 +19,12 @@ import com.badlogic.gdx.graphics.Color;
  * rotations.
  */
 public class GameScreen extends ScreenAdapter {
+
+    public static final float V_WIDTH = 800;
+    public static final float V_HEIGHT = 640;
+
+    private OrthographicCamera camera;
+    private Viewport viewport;
 
     private boolean gameOver = false;
     private SpriteBatch batch;
@@ -41,6 +50,9 @@ public class GameScreen extends ScreenAdapter {
     public GameScreen() {
         batch = new SpriteBatch();
 
+        camera = new OrthographicCamera();
+        viewport = new FitViewport(V_WIDTH, V_HEIGHT, camera);
+
         // Load the 16x16 pixel art files (make sure these exist in your assets folder)
         headTex = new Texture("head.png");
         bodyTex = new Texture("body.png");
@@ -58,9 +70,8 @@ public class GameScreen extends ScreenAdapter {
 
         scoreBoard = new ScoreBoard();
 
-        // Initialize Player 1 (Color is kept for structural compatibility)
-        int gridWidth = Gdx.graphics.getWidth() / TILE_SIZE;
-        int gridHeight = Gdx.graphics.getHeight() / TILE_SIZE;
+        int gridWidth = (int) (V_WIDTH / TILE_SIZE);
+        int gridHeight = (int) (V_HEIGHT / TILE_SIZE);
 
         WorldBounds bounds = new WorldBounds(gridWidth, gridHeight); // MEXI AQUI
 
@@ -173,12 +184,16 @@ public class GameScreen extends ScreenAdapter {
         // --- RENDERING ---
         // Rendering continues so we can see the frozen game state
         ScreenUtils.clear(0, 0, 0, 1);
+
+        camera.update(); // Update the camera's mathematical matrices
+        batch.setProjectionMatrix(camera.combined); // Instruct the batch to use the camera's view
+
         batch.begin();
 
         batch.setColor(Color.WHITE);
 
-        int gridWidth = Gdx.graphics.getWidth() / TILE_SIZE;
-        int gridHeight = Gdx.graphics.getHeight() / TILE_SIZE;
+        int gridWidth = (int) (V_WIDTH / TILE_SIZE);
+        int gridHeight = (int) (V_HEIGHT / TILE_SIZE);
 
         // Draw the tiled background grid with a checkerboard pattern
         for (int x = 0; x < gridWidth; x++) {
@@ -305,6 +320,13 @@ public class GameScreen extends ScreenAdapter {
                     1f, 1f,
                     rotation);
         }
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        // Update the viewport with the new physical window size.
+        // The "true" boolean automatically centers the camera.
+        viewport.update(width, height, true);
     }
 
     @Override

@@ -81,8 +81,8 @@ public class MainMenuScreen implements Screen {
             game.setScreen(new GameScreen(game));
             dispose();
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_2) || Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_2)) {
-            // Placeholder: We will create the HighScoreScreen next
-            System.out.println("Switching to High Scores...");
+            game.setScreen(new HighScoreScreen(game));
+            dispose();
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_3) || Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_3)) {
             Gdx.app.exit(); // Closes the application gracefully
         }

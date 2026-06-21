@@ -271,12 +271,11 @@ Durante o desenvolvimento do projeto, a equipe enfrentou diversas adversidades n
 ### 1. Plano de Testes
 O plano de testes visa validar a lógica central do jogo de forma isolada, garantindo que as regras de negócio funcionem independentemente do motor gráfico. Utilizamos o framework **JUnit 5** para a implementação da suíte de testes.
 
-* **Validação de Fronteiras (WorldBoundsTests):** Testa a lógica de *wrapping* (teletransporte nas bordas).
-    * *Objetivo:* Verificar se coordenadas que excedem o limite da grade (20x20) são corretamente mapeadas para o lado oposto.
-* **Testes de Regras de Negócio (FoodTests):** Valida a alteração de estados da classe `Food`.
-    * *Objetivo:* Garantir que `respawnAs` aplique corretamente os modificadores de pontuação e tamanho para maçãs douradas e podres.
-* **Simulação de Ciclo de Vida (SnakeDigestionTests):** Valida o comportamento da `Snake` ao processar penalidades.
-    * *Objetivo:* Confirmar se, ao consumir uma maçã podre, a cobra encolhe corretamente até o limite mínimo de 2 segmentos, protegendo a integridade do estado da entidade.
+* **Validação de Fronteiras (WorldBoundsTests):** Avaliou a lógica de \textit{wrapping} (teletransporte) nas bordas do mapa (grid 20x20). O teste confirma que coordenadas que extrapolam os limites da grade são mapeadas corretamente para a posição oposta.
+  
+* **Testes de Regras de Negócio (FoodTests):** Valida a classe `Food` e seus modificadores. O teste assegura que o sistema de `respawn` aplique pontuações e variações de tamanho consistentes para maçãs douradas (+10 pontos, +2 segmentos) e podres (-5 pontos, -1 segmento).
+  
+* **Simulação de Ciclo de Vida (SnakeDigestionTests):** Valida a integridade da entidade `Snake`. O teste garante que, ao consumir uma maçã podre, a cobra encolha apenas até o limite mínimo de dois segmentos, evitando estados de erro ou desaparecimento da entidade.
 
 ### 2. Resultados dos Testes
 A execução dos testes é integrada ao ciclo de vida do Gradle. Abaixo, o output gerado pela suíte de testes no ambiente de desenvolvimento:
@@ -290,7 +289,7 @@ SnakeGameLogicTests > testSnakeDigestionLogic() PASSED
 
 BUILD SUCCESSFUL in 1.2s
 ```
-Além da confirmação via terminal, o Gradle gera um relatório detalhado em HTML em: core/build/reports/tests/test/index.html.
+Além da confirmação via terminal, o Gradle gera um relatório detalhado em HTML que pode ser verificado [aqui](file:///home/daydreamer/Documents/USP/2026_1/POO/SCC0204---Multiplayer-Snake-Game/core/build/reports/tests/test/index.html)
 
 ---
 

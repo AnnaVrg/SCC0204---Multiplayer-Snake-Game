@@ -64,7 +64,8 @@ public class MainMenuScreen implements Screen {
         fontPrompt.setColor(Color.WHITE);
         String opt1 = "[1] New Game";
         String opt2 = "[2] High Scores";
-        String opt3 = "[3] Exit";
+        String opt3 = "[3] Instructions";
+        String opt4 = "[4] Exit";
 
         // Aligning everything to the center
         fontPrompt.draw(game.batch, opt1, (GameScreen.V_WIDTH - new GlyphLayout(fontPrompt, opt1).width) / 2f,
@@ -73,6 +74,8 @@ public class MainMenuScreen implements Screen {
                 GameScreen.V_HEIGHT / 2.5f - 60);
         fontPrompt.draw(game.batch, opt3, (GameScreen.V_WIDTH - new GlyphLayout(fontPrompt, opt3).width) / 2f,
                 GameScreen.V_HEIGHT / 2.5f - 120);
+        fontPrompt.draw(game.batch, opt4, (GameScreen.V_WIDTH - new GlyphLayout(fontPrompt, opt4).width) / 2f,
+                GameScreen.V_HEIGHT / 2.5f - 180);
 
         game.batch.end();
 
@@ -84,7 +87,10 @@ public class MainMenuScreen implements Screen {
             game.setScreen(new HighScoreScreen(game));
             dispose();
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_3) || Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_3)) {
-            Gdx.app.exit(); // Closes the application gracefully
+            game.setScreen(new InstructionsScreen(game));
+            dispose();
+        } else if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_4) || Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_4)) {
+            Gdx.app.exit(); // Closes the application
         }
     }
 

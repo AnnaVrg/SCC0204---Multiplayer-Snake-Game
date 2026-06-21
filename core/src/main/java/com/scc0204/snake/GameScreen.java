@@ -214,19 +214,6 @@ public class GameScreen extends ScreenAdapter {
     /**
      * Assumes the original 'head.png' points RIGHT.
      */
-    private float getHeadRotation(Snake.Direction dir) {
-        switch (dir) {
-            case UP:
-                return 90f;
-            case LEFT:
-                return 180f;
-            case DOWN:
-                return 270f;
-            case RIGHT:
-            default:
-                return 0f;
-        }
-    }
 
     /**
      * Calculates angle for the tail based on the segment in front of it.
@@ -286,7 +273,18 @@ public class GameScreen extends ScreenAdapter {
 
             if (i == 0) {
                 regionToDraw = headRegion;
-                rotation = getHeadRotation(player.getCurrentDirection());
+                Snake.SnakeSegment head = body.get(0);
+                Snake.SnakeSegment next = body.get(1);
+
+                if (next.x > head.x)
+                    rotation = 180f;
+                else if (next.x < head.x)
+                    rotation = 0f;
+                else if (next.y > head.y)
+                    rotation = 270f;
+                else
+                    rotation = 90f;
+
             } else if (i == body.size() - 1) {
                 regionToDraw = tailRegion;
                 Snake.SnakeSegment front = body.get(i - 1);

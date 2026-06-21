@@ -13,7 +13,8 @@ public class SoundManager {
     private Music backgroundMusic;
 
     /**
-     * Plays the food eating sound effect exactly once. 
+     * Plays the food eating sound effect exactly once.
+     *
      * @param filePath Name of the file inside the assets folder
      */
     public void playBiteSound(String filePath) {
@@ -31,6 +32,7 @@ public class SoundManager {
 
     /**
      * MODIFIED: Plays the death/collision sound exactly once.
+     *
      * @param filePath Name of the file inside the assets folder (e.g., "Death.WAV")
      */
     public void playDeathSound(String filePath) {
@@ -48,13 +50,14 @@ public class SoundManager {
 
     /**
      * Starts playing the background music in a continuous loop.
+     *
      * @param filePath Name of the file inside the assets folder
      */
     public void playBackgroundMusic(String filePath) {
         try {
             if (Gdx.files.internal(filePath).exists()) {
                 backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal(filePath));
-                backgroundMusic.setLooping(true); 
+                backgroundMusic.setLooping(true);
                 backgroundMusic.play();
             } else {
                 System.out.println("Music file missing, skipping: " + filePath);
@@ -67,7 +70,7 @@ public class SoundManager {
     public void stopBackgroundMusic() {
         if (backgroundMusic != null && backgroundMusic.isPlaying()) {
             backgroundMusic.stop();
-            backgroundMusic.dispose(); 
+            backgroundMusic.dispose();
         }
     }
 }

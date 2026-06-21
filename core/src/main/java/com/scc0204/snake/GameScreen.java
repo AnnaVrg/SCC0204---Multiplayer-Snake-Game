@@ -28,7 +28,7 @@ public class GameScreen extends ScreenAdapter {
     private Viewport viewport;
     private SpriteBatch batch;
 
-    private Texture headTex, bodyTex, tailTex, cornerTex, fruitTex, tileTex1, tileTex2;
+    private Texture headTex, bodyTex, tailTex, cornerTex, fruitTex, goldenTex, rottenTex, tileTex1, tileTex2;
     private TextureRegion headRegion, bodyRegion, tailRegion, cornerRegion;
 
     private Snake player1;
@@ -54,6 +54,8 @@ public class GameScreen extends ScreenAdapter {
         tailTex = new Texture("tail.png");
         cornerTex = new Texture("corner.png");
         fruitTex = new Texture("fruit.png");
+        goldenTex = new Texture("golden_apple.png");
+        rottenTex = new Texture("rotten_apple.png");
         tileTex1 = new Texture("tile1.png");
         tileTex2 = new Texture("tile2.png");
 
@@ -68,7 +70,7 @@ public class GameScreen extends ScreenAdapter {
         int gridWidth = (int) (V_WIDTH / GameSettings.TILE_SIZE);
         int gridHeight = (int) (V_HEIGHT / GameSettings.TILE_SIZE);
 
-        WorldBounds bounds = new WorldBounds(gridWidth, gridHeight); 
+        WorldBounds bounds = new WorldBounds(gridWidth, gridHeight);
 
         int spawnY = gridHeight / 2;
 
@@ -78,19 +80,27 @@ public class GameScreen extends ScreenAdapter {
         apple = new Food(gridWidth, gridHeight);
 
         soundManager = new SoundManager();
-        soundManager.playBackgroundMusic("GameMusic.WAV"); 
+        soundManager.playBackgroundMusic("GameMusic.WAV");
     }
 
     private void handleInput() {
-        if (Gdx.input.isKeyPressed(Input.Keys.UP)) player1.setDirection(Snake.Direction.UP);
-        else if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) player1.setDirection(Snake.Direction.DOWN);
-        else if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) player1.setDirection(Snake.Direction.LEFT);
-        else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) player1.setDirection(Snake.Direction.RIGHT);
+        if (Gdx.input.isKeyPressed(Input.Keys.UP))
+            player1.setDirection(Snake.Direction.UP);
+        else if (Gdx.input.isKeyPressed(Input.Keys.DOWN))
+            player1.setDirection(Snake.Direction.DOWN);
+        else if (Gdx.input.isKeyPressed(Input.Keys.LEFT))
+            player1.setDirection(Snake.Direction.LEFT);
+        else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT))
+            player1.setDirection(Snake.Direction.RIGHT);
 
-        if (Gdx.input.isKeyPressed(Input.Keys.W)) player2.setDirection(Snake.Direction.UP);
-        else if (Gdx.input.isKeyPressed(Input.Keys.S)) player2.setDirection(Snake.Direction.DOWN);
-        else if (Gdx.input.isKeyPressed(Input.Keys.A)) player2.setDirection(Snake.Direction.LEFT);
-        else if (Gdx.input.isKeyPressed(Input.Keys.D)) player2.setDirection(Snake.Direction.RIGHT);
+        if (Gdx.input.isKeyPressed(Input.Keys.W))
+            player2.setDirection(Snake.Direction.UP);
+        else if (Gdx.input.isKeyPressed(Input.Keys.S))
+            player2.setDirection(Snake.Direction.DOWN);
+        else if (Gdx.input.isKeyPressed(Input.Keys.A))
+            player2.setDirection(Snake.Direction.LEFT);
+        else if (Gdx.input.isKeyPressed(Input.Keys.D))
+            player2.setDirection(Snake.Direction.RIGHT);
     }
 
     @Override
@@ -118,10 +128,12 @@ public class GameScreen extends ScreenAdapter {
                     player2.kill();
                 } else {
                     for (Snake.SnakeSegment segment : player2.getBody()) {
-                        if (p1Head.x == segment.x && p1Head.y == segment.y) player1.kill();
+                        if (p1Head.x == segment.x && p1Head.y == segment.y)
+                            player1.kill();
                     }
                     for (Snake.SnakeSegment segment : player1.getBody()) {
-                        if (p2Head.x == segment.x && p2Head.y == segment.y) player2.kill();
+                        if (p2Head.x == segment.x && p2Head.y == segment.y)
+                            player2.kill();
                     }
                 }
 
@@ -130,12 +142,13 @@ public class GameScreen extends ScreenAdapter {
                     if (p1Head.x == apple.getX() && p1Head.y == apple.getY()) {
                         soundManager.playBiteSound("AppleBite.WAV");
                         player1.modifySize(apple.getSizeChange());
-                        
+
                         // MODIFIED: Locks score at 0 minimum
                         scoreP1 += apple.getPoints();
-                        if (scoreP1 < 0) scoreP1 = 0;
-                        
-                        spawnNewApple(); 
+                        if (scoreP1 < 0)
+                            scoreP1 = 0;
+
+                        spawnNewApple();
                     }
                 }
 
@@ -143,22 +156,23 @@ public class GameScreen extends ScreenAdapter {
                     if (p2Head.x == apple.getX() && p2Head.y == apple.getY()) {
                         soundManager.playBiteSound("AppleBite.WAV");
                         player2.modifySize(apple.getSizeChange());
-                        
+
                         // MODIFIED: Locks score at 0 minimum
                         scoreP2 += apple.getPoints();
-                        if (scoreP2 < 0) scoreP2 = 0;
-                        
-                        spawnNewApple(); 
+                        if (scoreP2 < 0)
+                            scoreP2 = 0;
+
+                        spawnNewApple();
                     }
                 }
 
             } else {
                 // --- GAME OVER STATE ---
                 soundManager.stopBackgroundMusic();
-                
+
                 // MODIFIED: Plays the death sound right as the Game Over triggers
                 soundManager.playDeathSound("Death.WAV");
-                
+
                 game.setScreen(new GameOverScreen(game, scoreP1, scoreP2));
                 dispose();
                 return;
@@ -167,8 +181,8 @@ public class GameScreen extends ScreenAdapter {
 
         // --- RENDERING ---
         ScreenUtils.clear(0, 0, 0, 1);
-        camera.update(); 
-        batch.setProjectionMatrix(camera.combined); 
+        camera.update();
+        batch.setProjectionMatrix(camera.combined);
 
         batch.begin();
         batch.setColor(Color.WHITE);
@@ -179,22 +193,34 @@ public class GameScreen extends ScreenAdapter {
         for (int x = 0; x < gridWidth; x++) {
             for (int y = 0; y < gridHeight; y++) {
                 if ((x + y) % 2 == 0) {
-                    batch.draw(tileTex1, x * GameSettings.TILE_SIZE, y * GameSettings.TILE_SIZE, GameSettings.TILE_SIZE, GameSettings.TILE_SIZE);
+                    batch.draw(tileTex1, x * GameSettings.TILE_SIZE, y * GameSettings.TILE_SIZE, GameSettings.TILE_SIZE,
+                            GameSettings.TILE_SIZE);
                 } else {
-                    batch.draw(tileTex2, x * GameSettings.TILE_SIZE, y * GameSettings.TILE_SIZE, GameSettings.TILE_SIZE, GameSettings.TILE_SIZE);
+                    batch.draw(tileTex2, x * GameSettings.TILE_SIZE, y * GameSettings.TILE_SIZE, GameSettings.TILE_SIZE,
+                            GameSettings.TILE_SIZE);
                 }
             }
         }
-
+        // Chooses the correct texture based on the apple type
+        Texture currentAppleTex;
         switch (apple.getType()) {
-            case GOLDEN: batch.setColor(Color.YELLOW); break;
-            case ROTTEN: batch.setColor(Color.BROWN); break;
+            case GOLDEN:
+                currentAppleTex = goldenTex;
+                break;
+            case ROTTEN:
+                currentAppleTex = rottenTex;
+                break;
             case NORMAL:
-            default: batch.setColor(Color.WHITE); break;
+            default:
+                currentAppleTex = fruitTex;
+                break;
         }
 
-        batch.draw(fruitTex, apple.getX() * GameSettings.TILE_SIZE, apple.getY() * GameSettings.TILE_SIZE, GameSettings.TILE_SIZE, GameSettings.TILE_SIZE);
-        batch.setColor(Color.WHITE); 
+        // Draws the selected texture
+        batch.draw(currentAppleTex, apple.getX() * GameSettings.TILE_SIZE, apple.getY() * GameSettings.TILE_SIZE,
+                GameSettings.TILE_SIZE, GameSettings.TILE_SIZE);
+
+        batch.setColor(Color.WHITE);
 
         drawSnake(player1);
         drawSnake(player2);
@@ -204,7 +230,7 @@ public class GameScreen extends ScreenAdapter {
         batch.end();
 
         if (wantsToQuit) {
-            soundManager.stopBackgroundMusic(); 
+            soundManager.stopBackgroundMusic();
             game.setScreen(new MainMenuScreen(game));
             dispose();
         }
@@ -213,19 +239,23 @@ public class GameScreen extends ScreenAdapter {
     private void spawnNewApple() {
         int chance = new java.util.Random().nextInt(100);
         if (chance < 10) {
-            apple.respawnAs(Food.AppleType.GOLDEN); 
+            apple.respawnAs(Food.AppleType.GOLDEN);
         } else if (chance < 30) {
-            apple.respawnAs(Food.AppleType.ROTTEN); 
+            apple.respawnAs(Food.AppleType.ROTTEN);
         } else {
-            apple.respawn(); 
+            apple.respawn();
         }
     }
 
     private float getDirectionRotation(Snake.SnakeSegment from, Snake.SnakeSegment to) {
-        if (to.x > from.x) return 0f; 
-        if (to.x < from.x) return 180f; 
-        if (to.y > from.y) return 90f; 
-        if (to.y < from.y) return 270f; 
+        if (to.x > from.x)
+            return 0f;
+        if (to.x < from.x)
+            return 180f;
+        if (to.y > from.y)
+            return 90f;
+        if (to.y < from.y)
+            return 270f;
         return 0f;
     }
 
@@ -235,10 +265,14 @@ public class GameScreen extends ScreenAdapter {
         boolean left = (front.x < current.x) || (back.x < current.x);
         boolean right = (front.x > current.x) || (back.x > current.x);
 
-        if (left && up) return 0f;
-        if (up && right) return 270f;
-        if (right && down) return 180f;
-        if (down && left) return 90f;
+        if (left && up)
+            return 0f;
+        if (up && right)
+            return 270f;
+        if (right && down)
+            return 180f;
+        if (down && left)
+            return 90f;
 
         return 0f;
     }
@@ -246,7 +280,7 @@ public class GameScreen extends ScreenAdapter {
     private void drawSnake(Snake player) {
         batch.setColor(player.getColor());
         LinkedList<Snake.SnakeSegment> body = player.getBody();
-        
+
         for (int i = 0; i < body.size(); i++) {
             Snake.SnakeSegment segment = body.get(i);
             float drawX = segment.x * GameSettings.TILE_SIZE;
@@ -258,20 +292,32 @@ public class GameScreen extends ScreenAdapter {
             if (i == 0) {
                 regionToDraw = headRegion;
                 Snake.SnakeSegment head = body.get(0);
-                
+
                 // MODIFIED: Fixes rendering crash when snake size is 1
                 if (body.size() > 1) {
                     Snake.SnakeSegment next = body.get(1);
-                    if (next.x > head.x) rotation = 180f;
-                    else if (next.x < head.x) rotation = 0f;
-                    else if (next.y > head.y) rotation = 270f;
-                    else rotation = 90f;
+                    if (next.x > head.x)
+                        rotation = 180f;
+                    else if (next.x < head.x)
+                        rotation = 0f;
+                    else if (next.y > head.y)
+                        rotation = 270f;
+                    else
+                        rotation = 90f;
                 } else {
                     switch (player.getCurrentDirection()) {
-                        case RIGHT: rotation = 0f; break;
-                        case LEFT:  rotation = 180f; break;
-                        case UP:    rotation = 90f; break;
-                        case DOWN:  rotation = 270f; break;
+                        case RIGHT:
+                            rotation = 0f;
+                            break;
+                        case LEFT:
+                            rotation = 180f;
+                            break;
+                        case UP:
+                            rotation = 90f;
+                            break;
+                        case DOWN:
+                            rotation = 270f;
+                            break;
                     }
                 }
 
@@ -312,6 +358,8 @@ public class GameScreen extends ScreenAdapter {
         tailTex.dispose();
         cornerTex.dispose();
         fruitTex.dispose();
+        goldenTex.dispose();
+        rottenTex.dispose();
         tileTex1.dispose();
         tileTex2.dispose();
         scoreBoard.dispose();

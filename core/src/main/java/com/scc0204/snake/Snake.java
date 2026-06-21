@@ -8,17 +8,22 @@ import java.util.LinkedList;
  * Manages its own body segments, movement timer, and current direction.
  */
 public class Snake extends Entity {
-    
+
     private LinkedList<SnakeSegment> body;
     private Color color;
     private Direction currentDirection;
 
     private float moveTimer = 0;
-    private float currentMoveTime = GameSettings.STARTING_SPEED; 
+    private float currentMoveTime = GameSettings.STARTING_SPEED;
 
+    // REPLACED: Swapped 'justAte' boolean flag for an integer counter for pending
+    // segment changes
     private int pendingGrowth = 0;
+
     private boolean isDead = false;
-    private WorldBounds bounds; 
+
+    // World Boundaries
+    private WorldBounds bounds;
 
     public enum Direction {
         UP, DOWN, LEFT, RIGHT
@@ -37,31 +42,44 @@ public class Snake extends Entity {
         super(startX, startY);
         this.color = color;
         this.body = new LinkedList<>();
-        this.bounds = bounds; 
+        this.bounds = bounds;
         this.body.add(new SnakeSegment(startX, startY));
 
         switch (startDir) {
-            case RIGHT: this.body.add(new SnakeSegment(startX - 1, startY)); break;
-            case LEFT:  this.body.add(new SnakeSegment(startX + 1, startY)); break;
-            case UP:    this.body.add(new SnakeSegment(startX, startY - 1)); break;
-            case DOWN:  this.body.add(new SnakeSegment(startX, startY + 1)); break;
+            case RIGHT:
+                this.body.add(new SnakeSegment(startX - 1, startY));
+                break;
+            case LEFT:
+                this.body.add(new SnakeSegment(startX + 1, startY));
+                break;
+            case UP:
+                this.body.add(new SnakeSegment(startX, startY - 1));
+                break;
+            case DOWN:
+                this.body.add(new SnakeSegment(startX, startY + 1));
+                break;
         }
 
         this.currentDirection = startDir;
     }
 
     public void setDirection(Direction direction) {
-        if (this.currentDirection == Direction.RIGHT && direction == Direction.LEFT) return;
-        if (this.currentDirection == Direction.LEFT && direction == Direction.RIGHT) return;
-        if (this.currentDirection == Direction.UP && direction == Direction.DOWN) return;
-        if (this.currentDirection == Direction.DOWN && direction == Direction.UP) return;
+        if (this.currentDirection == Direction.RIGHT && direction == Direction.LEFT)
+            return;
+        if (this.currentDirection == Direction.LEFT && direction == Direction.RIGHT)
+            return;
+        if (this.currentDirection == Direction.UP && direction == Direction.DOWN)
+            return;
+        if (this.currentDirection == Direction.DOWN && direction == Direction.UP)
+            return;
 
         this.currentDirection = direction;
     }
 
     @Override
     public void update(float deltaTime) {
-        if (isDead) return;
+        if (isDead)
+            return;
         moveTimer += deltaTime;
 
         if (moveTimer >= currentMoveTime) {
@@ -76,10 +94,18 @@ public class Snake extends Entity {
         int nextY = head.y;
 
         switch (currentDirection) {
-            case UP:    nextY += 1; break;
-            case DOWN:  nextY -= 1; break;
-            case LEFT:  nextX -= 1; break;
-            case RIGHT: nextX += 1; break;
+            case UP:
+                nextY += 1;
+                break;
+            case DOWN:
+                nextY -= 1;
+                break;
+            case LEFT:
+                nextX -= 1;
+                break;
+            case RIGHT:
+                nextX += 1;
+                break;
         }
 
         nextX = bounds.wrapX(nextX);
@@ -88,31 +114,35 @@ public class Snake extends Entity {
         for (SnakeSegment segment : body) {
             if (segment.x == nextX && segment.y == nextY) {
                 this.isDead = true;
-                return; 
+                return;
             }
         }
 
         body.addFirst(new SnakeSegment(nextX, nextY));
 
+        // NEW GROWTH/SHRINK LOGIC: Processing the growth/shrink queue
         if (pendingGrowth > 0) {
             pendingGrowth--;
         } else if (pendingGrowth < 0) {
             body.removeLast();
-            if (body.size() > 1) { 
+            if (body.size() > 1) {
                 body.removeLast();
-                pendingGrowth++;
             } else {
-                // MODIFIED: Prevent death when shrinking. Caps size at 1 (head only)
-                // and clears the queue so negative growth doesn't stack indefinitely.
-                this.pendingGrowth = 0; 
+                this.isDead = true;
             }
+            pendingGrowth++;
         } else {
             body.removeLast();
         }
     }
 
+    /**
+     * Handles dynamic snake sizing when special food is consumed.
+     * Replaces the old 'eat()' method.
+     */
     public void modifySize(int sizeChange) {
         this.pendingGrowth += sizeChange;
+
         if (sizeChange > 0 && this.currentMoveTime > 0.05f) {
             this.currentMoveTime -= 0.005f;
         }

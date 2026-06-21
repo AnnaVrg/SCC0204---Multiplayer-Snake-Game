@@ -39,6 +39,9 @@ public class GameScreen extends ScreenAdapter {
 
     private Food apple;
 
+    // MODIFIED: Added SoundManager to the screen
+    private SoundManager soundManager;
+
     private int scoreP1 = 0;
     private int scoreP2 = 0;
 
@@ -89,6 +92,9 @@ public class GameScreen extends ScreenAdapter {
 
         apple = new Food(gridWidth, gridHeight);
 
+        // MODIFIED: Initialize SoundManager and play background music
+        soundManager = new SoundManager();
+        soundManager.playBackgroundMusic("bgm.wav"); // Ensure this file is in your assets folder
     }
 
     private void handleInput() {
@@ -129,6 +135,9 @@ public class GameScreen extends ScreenAdapter {
 
                 player1.update(delta);
                 player2.update(delta);
+                
+                // MODIFIED: Crucial update for the apple timers
+                apple.update(delta);
 
                 // --- CROSS-COLLISION CHECK ---
                 Snake.SnakeSegment p1Head = player1.getBody().getFirst();
@@ -154,46 +163,45 @@ public class GameScreen extends ScreenAdapter {
                 // --- FOOD COLLISION ---
                 if (!player1.isDead()) {
                     if (p1Head.x == apple.getX() && p1Head.y == apple.getY()) {
-                        player1.eat();
-                        apple.respawn();
-                        scoreP1++;
+                        // MODIFIED: Replaced eat() with modifySize(), added dynamic score and sound
+                        soundManager.playBiteSound("AppleBite.WAV");
+                        player1.modifySize(apple.getSizeChange());
+                        scoreP1 += apple.getPoints();
+                        
+                        spawnNewApple(); // MODIFIED: Abstracted respawn logic
                         System.out.println("Player 1 Score: " + scoreP1);
                     }
                 }
 
                 if (!player2.isDead()) {
                     if (p2Head.x == apple.getX() && p2Head.y == apple.getY()) {
-                        player2.eat();
-                        apple.respawn();
-                        scoreP2++;
+                        // MODIFIED: Replaced eat() with modifySize(), added dynamic score and sound
+                        soundManager.playBiteSound("AppleBite.WAV");
+                        player2.modifySize(apple.getSizeChange());
+                        scoreP2 += apple.getPoints();
+                        
+                        spawnNewApple(); // MODIFIED: Abstracted respawn logic
                         System.out.println("Player 2 Score: " + scoreP2);
                     }
                 }
 
             } else {
                 // --- GAME OVER STATE ---
-                // If we enter here, at least one snake has died.
-
-                // Instantly transition to the GameOverScreen and pass the scores
+                // MODIFIED: Stop the music before switching screens
+                soundManager.stopBackgroundMusic();
+                
                 game.setScreen(new GameOverScreen(game, scoreP1, scoreP2));
-
-                // Clean up the game screen from memory
                 dispose();
-
-                // Stop running the rest of the render method for this frame
                 return;
             }
         }
 
         // --- RENDERING ---
-        // Rendering continues so we can see the frozen game state
         ScreenUtils.clear(0, 0, 0, 1);
-
-        camera.update(); // Update the camera's mathematical matrices
-        batch.setProjectionMatrix(camera.combined); // Instruct the batch to use the camera's view
+        camera.update(); 
+        batch.setProjectionMatrix(camera.combined); 
 
         batch.begin();
-
         batch.setColor(Color.WHITE);
 
         int gridWidth = (int) (V_WIDTH / GameSettings.TILE_SIZE);
@@ -212,9 +220,24 @@ public class GameScreen extends ScreenAdapter {
             }
         }
 
-        batch.setColor(1f, 1f, 1f, 1f);
+        // MODIFIED: Color the apple based on its specific type
+        switch (apple.getType()) {
+            case GOLDEN:
+                batch.setColor(Color.YELLOW);
+                break;
+            case ROTTEN:
+                batch.setColor(Color.BROWN);
+                break;
+            case NORMAL:
+            default:
+                batch.setColor(Color.WHITE); // Assuming default fruit.png is reddish
+                break;
+        }
+
         batch.draw(fruitTex, apple.getX() * GameSettings.TILE_SIZE, apple.getY() * GameSettings.TILE_SIZE,
                 GameSettings.TILE_SIZE, GameSettings.TILE_SIZE);
+
+        batch.setColor(Color.WHITE); // MODIFIED: Reset batch color after drawing the food
 
         drawSnake(player1);
         drawSnake(player2);
@@ -224,61 +247,49 @@ public class GameScreen extends ScreenAdapter {
         batch.end();
 
         if (wantsToQuit) {
+            soundManager.stopBackgroundMusic(); // MODIFIED: Stop music if quitting
             game.setScreen(new MainMenuScreen(game));
             dispose();
         }
     }
+
+    // MODIFIED: New helper method to handle the random chances of apple drops
+    private void spawnNewApple() {
+        int chance = new java.util.Random().nextInt(100);
+        if (chance < 10) {
+            apple.respawnAs(Food.AppleType.GOLDEN); // 10% chance
+        } else if (chance < 30) {
+            apple.respawnAs(Food.AppleType.ROTTEN); // 20% chance
+        } else {
+            apple.respawn(); // 70% chance
+        }
+    }
+
     // --- ROTATION HELPER METHODS ---
 
-    /**
-     * Assumes the original 'head.png' points RIGHT.
-     */
-
-    /**
-     * Calculates angle for the tail based on the segment in front of it.
-     * Assumes 'tail.png' naturally points LEFT and connects on its RIGHT side.
-     */
     private float getDirectionRotation(Snake.SnakeSegment from, Snake.SnakeSegment to) {
-        if (to.x > from.x)
-            return 0f; // Facing Right
-        if (to.x < from.x)
-            return 180f; // Facing Left
-        if (to.y > from.y)
-            return 90f; // Facing Up
-        if (to.y < from.y)
-            return 270f; // Facing Down
+        if (to.x > from.x) return 0f; 
+        if (to.x < from.x) return 180f; 
+        if (to.y > from.y) return 90f; 
+        if (to.y < from.y) return 270f; 
         return 0f;
     }
 
-    /**
-     * Calculates corner rotation based on surrounding segments.
-     * Assumes 'corner.png' connects LEFT and UP natively (an L-shape pointing
-     * bottom-right).
-     */
     private float getCornerRotation(Snake.SnakeSegment front, Snake.SnakeSegment current, Snake.SnakeSegment back) {
         boolean up = (front.y > current.y) || (back.y > current.y);
         boolean down = (front.y < current.y) || (back.y < current.y);
         boolean left = (front.x < current.x) || (back.x < current.x);
         boolean right = (front.x > current.x) || (back.x > current.x);
 
-        if (left && up)
-            return 0f;
-        if (up && right)
-            return 270f;
-        if (right && down)
-            return 180f;
-        if (down && left)
-            return 90f;
+        if (left && up) return 0f;
+        if (up && right) return 270f;
+        if (right && down) return 180f;
+        if (down && left) return 90f;
 
         return 0f;
     }
 
-    /**
-     * Helper method to render a snake.
-     * Applies the snake's specific color tint to differentiate players.
-     */
     private void drawSnake(Snake player) {
-        // Tints the pixel art based on the player's color
         batch.setColor(player.getColor());
 
         LinkedList<Snake.SnakeSegment> body = player.getBody();
@@ -295,14 +306,10 @@ public class GameScreen extends ScreenAdapter {
                 Snake.SnakeSegment head = body.get(0);
                 Snake.SnakeSegment next = body.get(1);
 
-                if (next.x > head.x)
-                    rotation = 180f;
-                else if (next.x < head.x)
-                    rotation = 0f;
-                else if (next.y > head.y)
-                    rotation = 270f;
-                else
-                    rotation = 90f;
+                if (next.x > head.x) rotation = 180f;
+                else if (next.x < head.x) rotation = 0f;
+                else if (next.y > head.y) rotation = 270f;
+                else rotation = 90f;
 
             } else if (i == body.size() - 1) {
                 regionToDraw = tailRegion;
@@ -335,14 +342,11 @@ public class GameScreen extends ScreenAdapter {
 
     @Override
     public void resize(int width, int height) {
-        // Update the viewport with the new physical window size.
-        // The "true" boolean automatically centers the camera.
         viewport.update(width, height, true);
     }
 
     @Override
     public void dispose() {
-        // ALWAYS clean up textures to prevent VRAM memory leaks
         headTex.dispose();
         bodyTex.dispose();
         tailTex.dispose();

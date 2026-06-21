@@ -8,32 +8,26 @@ import java.util.LinkedList;
  * Manages its own body segments, movement timer, and current direction.
  */
 public class Snake extends Entity {
-    // LinkedList is optimal here because we frequently add to the head (addFirst)
-    // and remove from the tail (removeLast) during movement.
+    
     private LinkedList<SnakeSegment> body;
     private Color color;
     private Direction currentDirection;
 
-    // Timer to control movement speed (grid-based movement, not pixel-by-pixel)
     private float moveTimer = 0;
-    private float currentMoveTime = GameSettings.STARTING_SPEED; // Start at default speed
+    private float currentMoveTime = GameSettings.STARTING_SPEED; 
 
-    // Flag to check if the snake just consumed food
-    private boolean justAte = false;
+    // REPLACED: Swapped 'justAte' boolean flag for an integer counter for pending segment changes
+    private int pendingGrowth = 0;
 
-    // Flag to check if the snake has collided with itself
     private boolean isDead = false;
 
     // World Boundaries
-    private WorldBounds bounds; // MEXI AQUII ANNNA
+    private WorldBounds bounds; 
 
     public enum Direction {
         UP, DOWN, LEFT, RIGHT
     }
 
-    /**
-     * Inner class representing a single grid block of the snake's body.
-     */
     public static class SnakeSegment {
         public int x, y;
 
@@ -47,126 +41,91 @@ public class Snake extends Entity {
         super(startX, startY);
         this.color = color;
         this.body = new LinkedList<>();
-        this.bounds = bounds; // MEXI AQUI ANNAAAA
+        this.bounds = bounds; 
         this.body.add(new SnakeSegment(startX, startY));
 
-        // Position the initial tail based on the starting direction
         switch (startDir) {
-            case RIGHT:
-                this.body.add(new SnakeSegment(startX - 1, startY));
-                break;
-            case LEFT:
-                this.body.add(new SnakeSegment(startX + 1, startY));
-                break;
-            case UP:
-                this.body.add(new SnakeSegment(startX, startY - 1));
-                break;
-            case DOWN:
-                this.body.add(new SnakeSegment(startX, startY + 1));
-                break;
+            case RIGHT: this.body.add(new SnakeSegment(startX - 1, startY)); break;
+            case LEFT:  this.body.add(new SnakeSegment(startX + 1, startY)); break;
+            case UP:    this.body.add(new SnakeSegment(startX, startY - 1)); break;
+            case DOWN:  this.body.add(new SnakeSegment(startX, startY + 1)); break;
         }
 
         this.currentDirection = startDir;
     }
 
-    /**
-     * Updates the snake's direction, preventing 180-degree turns
-     * (e.g., the snake cannot move LEFT if it is currently moving RIGHT).
-     */
     public void setDirection(Direction direction) {
-        if (this.currentDirection == Direction.RIGHT && direction == Direction.LEFT)
-            return;
-        if (this.currentDirection == Direction.LEFT && direction == Direction.RIGHT)
-            return;
-        if (this.currentDirection == Direction.UP && direction == Direction.DOWN)
-            return;
-        if (this.currentDirection == Direction.DOWN && direction == Direction.UP)
-            return;
+        if (this.currentDirection == Direction.RIGHT && direction == Direction.LEFT) return;
+        if (this.currentDirection == Direction.LEFT && direction == Direction.RIGHT) return;
+        if (this.currentDirection == Direction.UP && direction == Direction.DOWN) return;
+        if (this.currentDirection == Direction.DOWN && direction == Direction.UP) return;
 
         this.currentDirection = direction;
     }
 
     @Override
     public void update(float deltaTime) {
-
-        // Halt all logic if the snake is dead
-        if (isDead)
-            return;
+        if (isDead) return;
         moveTimer += deltaTime;
 
-        // Only trigger the movement logic when the timer reaches the threshold
         if (moveTimer >= currentMoveTime) {
             moveTimer = 0;
             move();
         }
     }
 
-    /**
-     * Executes the grid-based movement logic.
-     * Calculates the next position, adds a new head, and removes the tail.
-     */
     private void move() {
         SnakeSegment head = body.getFirst();
         int nextX = head.x;
         int nextY = head.y;
 
-        // Determine the next coordinates based on the current direction
         switch (currentDirection) {
-            case UP:
-                nextY += 1;
-                break;
-            case DOWN:
-                nextY -= 1;
-                break;
-            case LEFT:
-                nextX -= 1;
-                break;
-            case RIGHT:
-                nextX += 1;
-                break;
+            case UP:    nextY += 1; break;
+            case DOWN:  nextY -= 1; break;
+            case LEFT:  nextX -= 1; break;
+            case RIGHT: nextX += 1; break;
         }
 
-        // MEXI AQUI TAMBÉM
         nextX = bounds.wrapX(nextX);
         nextY = bounds.wrapY(nextY);
 
-        // If the calculated next position matches any current body segment, the snake
-        // dies.
         for (SnakeSegment segment : body) {
             if (segment.x == nextX && segment.y == nextY) {
                 this.isDead = true;
-                return; // Interrupt the movement execution
+                return; 
             }
         }
 
-        // Add the new segment at the calculated position (this becomes the new head)
         body.addFirst(new SnakeSegment(nextX, nextY));
 
-        if (!justAte) {
-            // If it didn't eat, remove the tail to maintain the same length (normal
-            // movement)
+        // NEW GROWTH/SHRINK LOGIC: Processing the growth/shrink queue
+        if (pendingGrowth > 0) {
+            pendingGrowth--;
+        } else if (pendingGrowth < 0) {
             body.removeLast();
+            if (body.size() > 1) { 
+                body.removeLast();
+            } else {
+                this.isDead = true; 
+            }
+            pendingGrowth++;
         } else {
-            // If it ate, do not remove the tail (the snake grows!) and reset the flag
-            justAte = false;
+            body.removeLast();
         }
     }
 
     /**
-     * Called when the snake's head collides with the food.
-     * Triggers growth and slightly increases movement speed.
+     * Handles dynamic snake sizing when special food is consumed.
+     * Replaces the old 'eat()' method.
      */
-    public void eat() {
-        this.justAte = true;
+    public void modifySize(int sizeChange) {
+        this.pendingGrowth += sizeChange;
 
-        // Increases speed by reducing the time between movements (capped at a minimum
-        // of 0.05f)
-        if (this.currentMoveTime > 0.05f) {
+        if (sizeChange > 0 && this.currentMoveTime > 0.05f) {
             this.currentMoveTime -= 0.005f;
         }
     }
 
-    // Allows the GameScreen to explicitly kill this snake (e.g., cross-collision)
     public void kill() {
         this.isDead = true;
     }
@@ -183,7 +142,6 @@ public class Snake extends Entity {
         return color;
     }
 
-    // Needed for the GameScreen to rotate the head sprite properly
     public Direction getCurrentDirection() {
         return currentDirection;
     }

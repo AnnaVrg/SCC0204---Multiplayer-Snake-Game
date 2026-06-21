@@ -289,7 +289,10 @@ SnakeGameLogicTests > testSnakeDigestionLogic() PASSED
 
 BUILD SUCCESSFUL in 1.2s
 ```
-Além da confirmação via terminal, o Gradle gera um relatório detalhado em HTML que pode ser verificado [aqui](file:///home/daydreamer/Documents/USP/2026_1/POO/SCC0204---Multiplayer-Snake-Game/core/build/reports/tests/test/index.html)
+Além da confirmação via terminal, o Gradle gera um relatório detalhado em HTML que pode ser verificado em: 
+```text
+core/build/reports/tests/test/index.html
+```
 
 ---
 

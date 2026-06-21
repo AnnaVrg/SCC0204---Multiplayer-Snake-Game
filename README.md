@@ -241,3 +241,63 @@ O gerenciamento de estado técnico, feedback e persistência foi distribuído em
 * **Gerenciamento de Áudio e Assets**: Os efeitos sonoros (como o som de mordida ao consumir frutas e o som de impacto na colisão) e a trilha sonora de fundo são manipulados de forma otimizada pelas classes nativas `Sound` e `Music`. Isso garante o carregamento assíncrono e a execução fluida do áudio em tempo real, sem interromper ou travar os frames de renderização.
 
 A arquitetura adotada busca manter um baixo acoplamento entre a renderização gráfica e a lógica matemática das colisões, garantindo alta coesão dentro de cada entidade e respeitando as boas práticas de Programação Orientada a Objetos aplicada ao desenvolvimento de jogos.
+
+---
+
+# 🚀 Desafios Técnicos e Soluções
+
+Durante o desenvolvimento do projeto, a equipe enfrentou diversas adversidades na integração de mecânicas com o framework **LibGDX**. Abaixo estão mapeados os principais desafios e como foram superados:
+
+### 🔤 1. Renderização de Fontes
+* **O Desafio:** Encontrar uma tipografia compatível que mantivesse a estética arcade sem distorcer as letras.
+* **A Solução:** Implementamos a fonte pixelada personalizada `Kenney Pixel.ttf`, processada e desenhada dinamicamente em tempo real em menus e textos através da classe `BitmapFont`.
+
+### ⚔️ 2. Sistema de Colisões Simultâneas
+* **O Desafio:** Tratar de forma limpa e eficiente a física de colisão simultânea de múltiplos elementos se movendo na grade.
+* **A Solução:** Estruturamos dois ciclos (*loops*) de verificação paralelos:
+  1. **Autocolisão:** Validação posicional da cabeça da cobra com seus próprios segmentos anteriores.
+  2. **Colisão Cruzada:** Validação posicional contínua entre a cabeça da cobra de um jogador contra toda a extensão da cobra adversária.
+
+### 💾 3. Persistência do Placar (High Scores)
+* **O Desafio:** Garantir que o histórico competitivos com os recordes não fosse apagado ao fechar o executável.
+* **A Solução:** Criamos o componente `ScoreBoard`, integrado à API nativa `Preferences` do LibGDX. O sistema intercepta o fim do jogo, valida se houve novo recorde e faz a gravação persistente em um arquivo de configuração local no disco.
+
+### 🖼️ 4. Responsividade e Proporção Visual
+* **O Desafio:** Ajustar ou redimensionar a janela do jogo de forma flexível sem esticar as texturas ou quebrar o alinhamento do grid matemático do tabuleiro.
+* **A Solução:** Isolamos o gerenciamento de renderização aplicando o conceito de `Viewport` do LibGDX, o que força a proporção de tela correta independente do monitor, adicionando barras pretas (*letterboxing*) de forma limpa se necessário.
+
+# 🛠️ Como Compilar e Executar o Jogo
+
+Siga os passos abaixo para baixar, compilar e executar o projeto diretamente na sua máquina local:
+
+### 1. Clonar o Repositório
+Abra o seu terminal e execute o comando abaixo para clonar o projeto:
+```bash
+git clone [https://github.com/AnnaVrg/SCC0204---Multiplayer-Snake-Game.git](https://github.com/AnnaVrg/SCC0204---Multiplayer-Snake-Game.git)
+
+```
+
+### 2. Acessar o Diretório
+
+Navegue até a pasta raiz do repositório que foi clonado: 
+```bash
+cd SCC0204---Multiplayer-Snake-Game 
+```
+
+### 3. Compilar e Executar o Projeto
+Certifique-se de estar no diretório raiz e rode o comando de inicialização correspondente ao seu sistema operacional/terminal
+
+```bash
+./gradlew lwjgl3:run
+```
+
+---
+# 📝 Comentários Gerais
+
+O desenvolvimento deste projeto permitiu aplicar de forma prática diversos conceitos fundamentais estudados na disciplina de Programação Orientada a Objetos (POO), incluindo encapsulamento, herança, abstração, polimorfismo e a organização modular de código voltada para a arquitetura de jogos.
+
+Além do aprendizado técnico conceitual, o trabalho proporcionou uma experiência valiosa no desenvolvimento colaborativo e na separação rigorosa de responsabilidades entre componentes, gerenciando de forma eficiente um *Game Loop* síncrono que dita o ritmo da simulação e das mecânicas em tempo real.
+
+Um aspecto altamente relevante do projeto foi lidar com os desafios de infraestrutura e compatibilidade de plataformas no ecossistema **LWJGL3/LibGDX**. A implementação de rotinas auxiliares de inicialização (como o tratamento de concorrência de *threads* nativas) garantiu que o jogo rodasse perfeitamente e sem travamentos em diferentes sistemas operacionais (Windows, Linux e macOS), mantendo taxas de quadros estáveis e respostas de comandos imediatas para ambos os jogadores.
+
+A estrutura baseada em estados de tela (`Screen`) e entidades isoladas torna o sistema facilmente expansível. Isso permite, em futuras iterações, a adição de novos modos de jogo (como partidas online via *WebSockets*), inserção de novos tipos de obstáculos dinâmicos no tabuleiro ou integração com bancos de dados remotos para um ranking global de *High Scores*, tudo isso sem a necessidade de reestruturar a arquitetura existente.

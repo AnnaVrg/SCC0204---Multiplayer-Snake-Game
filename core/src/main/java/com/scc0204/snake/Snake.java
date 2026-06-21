@@ -21,6 +21,9 @@ public class Snake extends Entity {
     // Flag to check if the snake just consumed food
     private boolean justAte = false;
 
+    // World Boundaries 
+    private WorldBounds bounds; // MEXI AQUII ANNNA
+
     public enum Direction {
         UP, DOWN, LEFT, RIGHT
     }
@@ -37,13 +40,14 @@ public class Snake extends Entity {
         }
     }
 
-    public Snake(int startX, int startY, Color color) {
+    public Snake(int startX, int startY, Color color, WorldBounds bounds) {
         super(startX, startY);
         this.color = color;
         this.body = new LinkedList<>();
         this.body.add(new SnakeSegment(startX, startY));
         this.body.add(new SnakeSegment(startX - 1, startY));
         this.currentDirection = Direction.RIGHT; // Default starting direction
+        this.bounds = bounds; // MEXI AQUI ANNAAAA
     }
 
     /**
@@ -98,6 +102,10 @@ public class Snake extends Entity {
                 nextX += 1;
                 break;
         }
+
+        // MEXI AQUI TAMBÉM
+        nextX = bounds.wrapX(nextX);
+        nextY = bounds.wrapY(nextY);
 
         // Add the new segment at the calculated position (this becomes the new head)
         body.addFirst(new SnakeSegment(nextX, nextY));

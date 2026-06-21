@@ -266,6 +266,32 @@ Durante o desenvolvimento do projeto, a equipe enfrentou diversas adversidades n
 * **O Desafio:** Ajustar ou redimensionar a janela do jogo de forma flexível sem esticar as texturas ou quebrar o alinhamento do grid matemático do tabuleiro.
 * **A Solução:** Isolamos o gerenciamento de renderização aplicando o conceito de `Viewport` do LibGDX, o que força a proporção de tela correta independente do monitor, adicionando barras pretas (*letterboxing*) de forma limpa se necessário.
 
+---
+# 🧪 Testes Automatizados (JUnit 5)
+### 1. Plano de Testes
+O plano de testes visa validar a lógica central do jogo de forma isolada, garantindo que as regras de negócio funcionem independentemente do motor gráfico. Utilizamos o framework **JUnit 5** para a implementação da suíte de testes.
+
+* **Validação de Fronteiras (WorldBoundsTests):** Testa a lógica de *wrapping* (teletransporte nas bordas).
+    * *Objetivo:* Verificar se coordenadas que excedem o limite da grade (20x20) são corretamente mapeadas para o lado oposto.
+* **Testes de Regras de Negócio (FoodTests):** Valida a alteração de estados da classe `Food`.
+    * *Objetivo:* Garantir que `respawnAs` aplique corretamente os modificadores de pontuação e tamanho para maçãs douradas e podres.
+* **Simulação de Ciclo de Vida (SnakeDigestionTests):** Valida o comportamento da `Snake` ao processar penalidades.
+    * *Objetivo:* Confirmar se, ao consumir uma maçã podre, a cobra encolhe corretamente até o limite mínimo de 2 segmentos, protegendo a integridade do estado da entidade.
+
+### 2. Resultados dos Testes
+A execução dos testes é integrada ao ciclo de vida do Gradle. Abaixo, o output gerado pela suíte de testes no ambiente de desenvolvimento:
+
+```text
+> Task :core:test
+
+SnakeGameLogicTests > testWorldBoundsWrapping() PASSED
+SnakeGameLogicTests > testFoodTypesAndModifiers() PASSED
+SnakeGameLogicTests > testSnakeDigestionLogic() PASSED
+
+BUILD SUCCESSFUL in 1.2s
+```
+Além da confirmação via terminal, o Gradle gera um relatório detalhado em HTML em: core/build/reports/tests/test/index.html.
+
 # 🛠️ Como Compilar e Executar o Jogo
 
 Siga os passos abaixo para baixar, compilar e executar o projeto diretamente na sua máquina local:

@@ -43,6 +43,7 @@ public class GameScreen extends ScreenAdapter {
     private int scoreP2 = 0;
 
     private ScoreBoard scoreBoard;
+    private PauseMenu pauseMenu;
 
     // Scales the 16x16 art up to 32x32 visually on the screen
 
@@ -69,6 +70,7 @@ public class GameScreen extends ScreenAdapter {
         cornerRegion = new TextureRegion(cornerTex);
 
         scoreBoard = new ScoreBoard();
+        pauseMenu = new PauseMenu();
 
         int gridWidth = (int) (V_WIDTH / GameSettings.TILE_SIZE);
         int gridHeight = (int) (V_HEIGHT / GameSettings.TILE_SIZE);
@@ -113,67 +115,74 @@ public class GameScreen extends ScreenAdapter {
 
     @Override
     public void render(float delta) {
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.P) || Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            pauseMenu.togglePause();
+        }
+
         handleInput();
 
-        // --- GAME STATE CHECK ---
-        // Only update the game logic if BOTH snakes are alive
-        if (!player1.isDead() && !player2.isDead()) {
+        if (!pauseMenu.isPaused()) {
+            // --- GAME STATE CHECK ---
+            // Only update the game logic if BOTH snakes are alive
+            if (!player1.isDead() && !player2.isDead()) {
 
-            player1.update(delta);
-            player2.update(delta);
+                player1.update(delta);
+                player2.update(delta);
 
-            // --- CROSS-COLLISION CHECK ---
-            Snake.SnakeSegment p1Head = player1.getBody().getFirst();
-            Snake.SnakeSegment p2Head = player2.getBody().getFirst();
+                // --- CROSS-COLLISION CHECK ---
+                Snake.SnakeSegment p1Head = player1.getBody().getFirst();
+                Snake.SnakeSegment p2Head = player2.getBody().getFirst();
 
-            // Head-to-Head collision (Tie: both die)
-            if (p1Head.x == p2Head.x && p1Head.y == p2Head.y) {
-                player1.kill();
-                player2.kill();
+                // Head-to-Head collision (Tie: both die)
+                if (p1Head.x == p2Head.x && p1Head.y == p2Head.y) {
+                    player1.kill();
+                    player2.kill();
+                } else {
+                    // Did Player 1 hit Player 2's body?
+                    for (Snake.SnakeSegment segment : player2.getBody()) {
+                        if (p1Head.x == segment.x && p1Head.y == segment.y)
+                            player1.kill();
+                    }
+                    // Did Player 2 hit Player 1's body?
+                    for (Snake.SnakeSegment segment : player1.getBody()) {
+                        if (p2Head.x == segment.x && p2Head.y == segment.y)
+                            player2.kill();
+                    }
+                }
+
+                // --- FOOD COLLISION ---
+                if (!player1.isDead()) {
+                    if (p1Head.x == apple.getX() && p1Head.y == apple.getY()) {
+                        player1.eat();
+                        apple.respawn();
+                        scoreP1++;
+                        System.out.println("Player 1 Score: " + scoreP1);
+                    }
+                }
+
+                if (!player2.isDead()) {
+                    if (p2Head.x == apple.getX() && p2Head.y == apple.getY()) {
+                        player2.eat();
+                        apple.respawn();
+                        scoreP2++;
+                        System.out.println("Player 2 Score: " + scoreP2);
+                    }
+                }
+
             } else {
-                // Did Player 1 hit Player 2's body?
-                for (Snake.SnakeSegment segment : player2.getBody()) {
-                    if (p1Head.x == segment.x && p1Head.y == segment.y)
-                        player1.kill();
-                }
-                // Did Player 2 hit Player 1's body?
-                for (Snake.SnakeSegment segment : player1.getBody()) {
-                    if (p2Head.x == segment.x && p2Head.y == segment.y)
-                        player2.kill();
-                }
+                // --- GAME OVER STATE ---
+                // If we enter here, at least one snake has died.
+
+                // Instantly transition to the GameOverScreen and pass the scores
+                game.setScreen(new GameOverScreen(game, scoreP1, scoreP2));
+
+                // Clean up the game screen from memory
+                dispose();
+
+                // Stop running the rest of the render method for this frame
+                return;
             }
-
-            // --- FOOD COLLISION ---
-            if (!player1.isDead()) {
-                if (p1Head.x == apple.getX() && p1Head.y == apple.getY()) {
-                    player1.eat();
-                    apple.respawn();
-                    scoreP1++;
-                    System.out.println("Player 1 Score: " + scoreP1);
-                }
-            }
-
-            if (!player2.isDead()) {
-                if (p2Head.x == apple.getX() && p2Head.y == apple.getY()) {
-                    player2.eat();
-                    apple.respawn();
-                    scoreP2++;
-                    System.out.println("Player 2 Score: " + scoreP2);
-                }
-            }
-
-        } else {
-            // --- GAME OVER STATE ---
-            // If we enter here, at least one snake has died.
-
-            // Instantly transition to the GameOverScreen and pass the scores
-            game.setScreen(new GameOverScreen(game, scoreP1, scoreP2));
-
-            // Clean up the game screen from memory
-            dispose();
-
-            // Stop running the rest of the render method for this frame
-            return;
         }
 
         // --- RENDERING ---
@@ -210,8 +219,14 @@ public class GameScreen extends ScreenAdapter {
         drawSnake(player1);
         drawSnake(player2);
         scoreBoard.draw(batch, scoreP1, scoreP2);
+        boolean wantsToQuit = pauseMenu.updateAndDraw(batch, V_WIDTH, V_HEIGHT);
 
         batch.end();
+
+        if (wantsToQuit) {
+            game.setScreen(new MainMenuScreen(game));
+            dispose();
+        }
     }
     // --- ROTATION HELPER METHODS ---
 
@@ -336,5 +351,6 @@ public class GameScreen extends ScreenAdapter {
         tileTex1.dispose();
         tileTex2.dispose();
         scoreBoard.dispose();
+        pauseMenu.dispose();
     }
 }

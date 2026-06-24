@@ -6,10 +6,12 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 public class SnakeGame extends Game {
     // Public batch so screens can share the same rendering tool
     public SpriteBatch batch;
+    public GameSettings settings;
 
     @Override
     public void create() {
         batch = new SpriteBatch();
+        settings = new GameSettings();
         // Start the application by showing the Main Menu
         this.setScreen(new MainMenuScreen(this));
     }

@@ -21,6 +21,15 @@ public class MainMenuScreen implements Screen {
     private BitmapFont fontTitle;
     private BitmapFont fontPrompt;
 
+    // Otimização: Variáveis estáticas de layout e texto
+    private GlyphLayout titleLayout, opt1Layout, opt2Layout, opt3Layout, opt4Layout, opt5Layout;
+    private final String titleText = "MULTIPLAYER SNAKE";
+    private final String opt1 = "[1] New Game";
+    private final String opt2 = "[2] High Scores";
+    private final String opt3 = "[3] Instructions";
+    private final String opt4 = "[4] Settings";
+    private final String opt5 = "[5] Exit";
+
     public MainMenuScreen(SnakeGame game) {
         this.game = game;
 
@@ -43,6 +52,13 @@ public class MainMenuScreen implements Screen {
         fontPrompt = generator.generateFont(paramPrompt);
 
         generator.dispose();
+
+        titleLayout = new GlyphLayout(fontTitle, titleText);
+        opt1Layout = new GlyphLayout(fontPrompt, opt1);
+        opt2Layout = new GlyphLayout(fontPrompt, opt2);
+        opt3Layout = new GlyphLayout(fontPrompt, opt3);
+        opt4Layout = new GlyphLayout(fontPrompt, opt4);
+        opt5Layout = new GlyphLayout(fontPrompt, opt5);
     }
 
     @Override
@@ -54,31 +70,17 @@ public class MainMenuScreen implements Screen {
 
         game.batch.begin();
 
-        // Draw Title
-        String title = "MULTIPLAYER SNAKE";
-        GlyphLayout titleLayout = new GlyphLayout(fontTitle, title);
-        float titleX = (GameScreen.V_WIDTH - titleLayout.width) / 2f;
-        fontTitle.draw(game.batch, title, titleX, GameScreen.V_HEIGHT / 1.5f);
+        float centerX = GameScreen.V_WIDTH / 2f;
 
-        // Draw Menu Options
+        fontTitle.draw(game.batch, titleText, centerX - (titleLayout.width / 2f), GameScreen.V_HEIGHT / 1.5f);
+
         fontPrompt.setColor(Color.WHITE);
-        String opt1 = "[1] New Game";
-        String opt2 = "[2] High Scores";
-        String opt3 = "[3] Instructions";
-        String opt4 = "[4] Settings";
-        String opt5 = "[5] Exit";
-
-        // Aligning everything to the center
-        fontPrompt.draw(game.batch, opt1, (GameScreen.V_WIDTH - new GlyphLayout(fontPrompt, opt1).width) / 2f,
-                GameScreen.V_HEIGHT / 2.5f + 20);
-        fontPrompt.draw(game.batch, opt2, (GameScreen.V_WIDTH - new GlyphLayout(fontPrompt, opt2).width) / 2f,
-                GameScreen.V_HEIGHT / 2.5f - 40);
-        fontPrompt.draw(game.batch, opt3, (GameScreen.V_WIDTH - new GlyphLayout(fontPrompt, opt3).width) / 2f,
-                GameScreen.V_HEIGHT / 2.5f - 100);
-        fontPrompt.draw(game.batch, opt4, (GameScreen.V_WIDTH - new GlyphLayout(fontPrompt, opt4).width) / 2f,
-                GameScreen.V_HEIGHT / 2.5f - 160);
-        fontPrompt.draw(game.batch, opt5, (GameScreen.V_WIDTH - new GlyphLayout(fontPrompt, opt5).width) / 2f,
-                GameScreen.V_HEIGHT / 2.5f - 220);
+        fontPrompt.draw(game.batch, opt1, centerX - (opt1Layout.width / 2f), GameScreen.V_HEIGHT / 2.5f + 20);
+        fontPrompt.draw(game.batch, opt2, centerX - (opt2Layout.width / 2f), GameScreen.V_HEIGHT / 2.5f - 40);
+        fontPrompt.draw(game.batch, opt3, centerX - (opt3Layout.width / 2f), GameScreen.V_HEIGHT / 2.5f - 100);
+        fontPrompt.draw(game.batch, opt4, centerX - (opt4Layout.width / 2f), GameScreen.V_HEIGHT / 2.5f - 160);
+        fontPrompt.draw(game.batch, opt5, centerX - (opt5Layout.width / 2f), GameScreen.V_HEIGHT / 2.5f - 220);
+        ;
 
         game.batch.end();
 

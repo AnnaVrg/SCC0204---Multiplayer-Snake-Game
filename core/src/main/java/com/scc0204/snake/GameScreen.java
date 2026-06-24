@@ -42,6 +42,14 @@ public class GameScreen extends ScreenAdapter {
     private ScoreBoard scoreBoard;
     private PauseMenu pauseMenu;
 
+    // Constantes para as probabilidades (em porcentagem)
+    private static final int CHANCE_GOLDEN = 10; // 10% de chance
+    private static final int CHANCE_ROTTEN = 20; // 20% de chance
+    private static final int PENALTY_SUICIDE = 10;
+
+    // Instância única do gerador de números aleatórios (reutilizada sempre)
+    private final java.util.Random random = new java.util.Random();
+
     public GameScreen(SnakeGame game) {
         this.game = game;
         this.batch = game.batch;
@@ -67,15 +75,16 @@ public class GameScreen extends ScreenAdapter {
         scoreBoard = new ScoreBoard();
         pauseMenu = new PauseMenu();
 
-        int gridWidth = (int) (V_WIDTH / GameSettings.TILE_SIZE);
-        int gridHeight = (int) (V_HEIGHT / GameSettings.TILE_SIZE);
+        int gridWidth = (int) (V_WIDTH / game.settings.getTileSize());
+        int gridHeight = (int) (V_HEIGHT / game.settings.getTileSize());
 
         WorldBounds bounds = new WorldBounds(gridWidth, gridHeight);
 
         int spawnY = gridHeight / 2;
 
-        player1 = new Snake(5, spawnY, Color.WHITE, bounds, Snake.Direction.RIGHT);
-        player2 = new Snake(gridWidth - 5, spawnY, new Color(0.5f, 0.7f, 1f, 1f), bounds, Snake.Direction.LEFT);
+        player1 = new Snake(5, spawnY, Color.WHITE, bounds, Snake.Direction.RIGHT, game.settings.getStartingSpeed());
+        player2 = new Snake(gridWidth - 5, spawnY, new Color(0.5f, 0.7f, 1f, 1f), bounds, Snake.Direction.LEFT,
+                game.settings.getStartingSpeed());
 
         apple = new Food(gridWidth, gridHeight);
 
@@ -84,22 +93,22 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void handleInput() {
-        if (Gdx.input.isKeyPressed(Input.Keys.UP))
+        if (Gdx.input.isKeyJustPressed(Input.Keys.UP))
             player1.setDirection(Snake.Direction.UP);
-        else if (Gdx.input.isKeyPressed(Input.Keys.DOWN))
+        else if (Gdx.input.isKeyJustPressed(Input.Keys.DOWN))
             player1.setDirection(Snake.Direction.DOWN);
-        else if (Gdx.input.isKeyPressed(Input.Keys.LEFT))
+        else if (Gdx.input.isKeyJustPressed(Input.Keys.LEFT))
             player1.setDirection(Snake.Direction.LEFT);
-        else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT))
+        else if (Gdx.input.isKeyJustPressed(Input.Keys.RIGHT))
             player1.setDirection(Snake.Direction.RIGHT);
 
-        if (Gdx.input.isKeyPressed(Input.Keys.W))
+        if (Gdx.input.isKeyJustPressed(Input.Keys.W))
             player2.setDirection(Snake.Direction.UP);
-        else if (Gdx.input.isKeyPressed(Input.Keys.S))
+        else if (Gdx.input.isKeyJustPressed(Input.Keys.S))
             player2.setDirection(Snake.Direction.DOWN);
-        else if (Gdx.input.isKeyPressed(Input.Keys.A))
+        else if (Gdx.input.isKeyJustPressed(Input.Keys.A))
             player2.setDirection(Snake.Direction.LEFT);
-        else if (Gdx.input.isKeyPressed(Input.Keys.D))
+        else if (Gdx.input.isKeyJustPressed(Input.Keys.D))
             player2.setDirection(Snake.Direction.RIGHT);
     }
 
@@ -140,7 +149,7 @@ public class GameScreen extends ScreenAdapter {
                 // --- FOOD COLLISION ---
                 if (!player1.isDead()) {
                     if (p1Head.x == apple.getX() && p1Head.y == apple.getY()) {
-                        soundManager.playBiteSound("AppleBite.WAV");
+                        soundManager.playBiteSound();
                         player1.modifySize(apple.getSizeChange());
 
                         // MODIFIED: Locks score at 0 minimum
@@ -154,7 +163,7 @@ public class GameScreen extends ScreenAdapter {
 
                 if (!player2.isDead()) {
                     if (p2Head.x == apple.getX() && p2Head.y == apple.getY()) {
-                        soundManager.playBiteSound("AppleBite.WAV");
+                        soundManager.playBiteSound();
                         player2.modifySize(apple.getSizeChange());
 
                         // MODIFIED: Locks score at 0 minimum
@@ -170,8 +179,14 @@ public class GameScreen extends ScreenAdapter {
                 // --- GAME OVER STATE ---
                 soundManager.stopBackgroundMusic();
 
-                // MODIFIED: Plays the death sound right as the Game Over triggers
-                soundManager.playDeathSound("Death.WAV");
+                // Aplica a penalidade e trava no zero caso a cobra tenha se suicidado
+                if (player1.didDieBySuicide()) {
+                    scoreP1 = Math.max(0, scoreP1 - PENALTY_SUICIDE);
+                }
+
+                if (player2.didDieBySuicide()) {
+                    scoreP2 = Math.max(0, scoreP2 - PENALTY_SUICIDE);
+                }
 
                 game.setScreen(new GameOverScreen(game, scoreP1, scoreP2));
                 dispose();
@@ -187,17 +202,19 @@ public class GameScreen extends ScreenAdapter {
         batch.begin();
         batch.setColor(Color.WHITE);
 
-        int gridWidth = (int) (V_WIDTH / GameSettings.TILE_SIZE);
-        int gridHeight = (int) (V_HEIGHT / GameSettings.TILE_SIZE);
+        int gridWidth = (int) (V_WIDTH / game.settings.getTileSize());
+        int gridHeight = (int) (V_HEIGHT / game.settings.getTileSize());
 
         for (int x = 0; x < gridWidth; x++) {
             for (int y = 0; y < gridHeight; y++) {
                 if ((x + y) % 2 == 0) {
-                    batch.draw(tileTex1, x * GameSettings.TILE_SIZE, y * GameSettings.TILE_SIZE, GameSettings.TILE_SIZE,
-                            GameSettings.TILE_SIZE);
+                    batch.draw(tileTex1, x * game.settings.getTileSize(), y * game.settings.getTileSize(),
+                            game.settings.getTileSize(),
+                            game.settings.getTileSize());
                 } else {
-                    batch.draw(tileTex2, x * GameSettings.TILE_SIZE, y * GameSettings.TILE_SIZE, GameSettings.TILE_SIZE,
-                            GameSettings.TILE_SIZE);
+                    batch.draw(tileTex2, x * game.settings.getTileSize(), y * game.settings.getTileSize(),
+                            game.settings.getTileSize(),
+                            game.settings.getTileSize());
                 }
             }
         }
@@ -217,8 +234,9 @@ public class GameScreen extends ScreenAdapter {
         }
 
         // Draws the selected texture
-        batch.draw(currentAppleTex, apple.getX() * GameSettings.TILE_SIZE, apple.getY() * GameSettings.TILE_SIZE,
-                GameSettings.TILE_SIZE, GameSettings.TILE_SIZE);
+        batch.draw(currentAppleTex, apple.getX() * game.settings.getTileSize(),
+                apple.getY() * game.settings.getTileSize(),
+                game.settings.getTileSize(), game.settings.getTileSize());
 
         batch.setColor(Color.WHITE);
 
@@ -237,13 +255,16 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void spawnNewApple() {
-        int chance = new java.util.Random().nextInt(100);
-        if (chance < 10) {
+        // Sorteia um número de 0 a 99 usando a instância já existente
+        int chance = random.nextInt(100);
+
+        // Lógica com as constantes nomeadas
+        if (chance < CHANCE_GOLDEN) {
             apple.respawnAs(Food.AppleType.GOLDEN);
-        } else if (chance < 30) {
+        } else if (chance < (CHANCE_GOLDEN + CHANCE_ROTTEN)) {
             apple.respawnAs(Food.AppleType.ROTTEN);
         } else {
-            apple.respawn();
+            apple.respawn(); // Maçã normal
         }
     }
 
@@ -283,8 +304,8 @@ public class GameScreen extends ScreenAdapter {
 
         for (int i = 0; i < body.size(); i++) {
             Snake.SnakeSegment segment = body.get(i);
-            float drawX = segment.x * GameSettings.TILE_SIZE;
-            float drawY = segment.y * GameSettings.TILE_SIZE;
+            float drawX = segment.x * game.settings.getTileSize();
+            float drawY = segment.y * game.settings.getTileSize();
 
             TextureRegion regionToDraw;
             float rotation = 0f;
@@ -341,8 +362,8 @@ public class GameScreen extends ScreenAdapter {
                 }
             }
 
-            batch.draw(regionToDraw, drawX, drawY, GameSettings.TILE_SIZE / 2f, GameSettings.TILE_SIZE / 2f,
-                    GameSettings.TILE_SIZE, GameSettings.TILE_SIZE, 1f, 1f, rotation);
+            batch.draw(regionToDraw, drawX, drawY, game.settings.getTileSize() / 2f, game.settings.getTileSize() / 2f,
+                    game.settings.getTileSize(), game.settings.getTileSize(), 1f, 1f, rotation);
         }
     }
 
@@ -364,5 +385,9 @@ public class GameScreen extends ScreenAdapter {
         tileTex2.dispose();
         scoreBoard.dispose();
         pauseMenu.dispose();
+
+        if (soundManager != null) {
+            soundManager.dispose();
+        }
     }
 }

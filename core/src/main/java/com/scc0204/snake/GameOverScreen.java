@@ -26,10 +26,22 @@ public class GameOverScreen implements Screen {
     private boolean enteringP2Name = false;
     private String currentName = "";
 
+    private SoundManager soundManager;
+
+    // Otimização: Layouts estáticos
+    private GlyphLayout titleLayout, winnerLayout, scoreLayout, opt1Layout, opt2Layout;
+    // Otimização: Layout que será reaproveitado para as partes dinâmicas
+    private GlyphLayout dynamicLayout;
+
+    private String winnerText, scoreText;
+    private final String opt1 = "[1] Play Again";
+    private final String opt2 = "[2] Main Menu";
+
     public GameOverScreen(SnakeGame game, int scoreP1, int scoreP2) {
         this.game = game;
         this.scoreP1 = scoreP1;
         this.scoreP2 = scoreP2;
+        this.soundManager = new SoundManager();
 
         camera = new OrthographicCamera();
         viewport = new FitViewport(GameScreen.V_WIDTH, GameScreen.V_HEIGHT, camera);
@@ -46,7 +58,19 @@ public class GameOverScreen implements Screen {
         paramMedium.color = Color.WHITE;
         fontMedium = generator.generateFont(paramMedium);
 
-        generator.dispose();
+        dynamicLayout = new GlyphLayout();
+
+        titleLayout = new GlyphLayout(fontLarge, "GAME OVER");
+
+        winnerText = (scoreP1 > scoreP2) ? "PLAYER 1 WINS!" : (scoreP2 > scoreP1) ? "PLAYER 2 WINS!" : "IT'S A TIE!";
+        winnerLayout = new GlyphLayout(fontMedium, winnerText);
+
+        scoreText = "P1: " + scoreP1 + "   -   P2: " + scoreP2;
+        scoreLayout = new GlyphLayout(fontMedium, scoreText);
+
+        opt1Layout = new GlyphLayout(fontMedium, opt1);
+        opt2Layout = new GlyphLayout(fontMedium, opt2);
+        ;
     }
 
     @Override
@@ -59,44 +83,30 @@ public class GameOverScreen implements Screen {
         float centerX = GameScreen.V_WIDTH / 2f;
         float centerY = GameScreen.V_HEIGHT / 2f;
 
-        // Draw GAME OVER
-        String title = "GAME OVER";
-        GlyphLayout titleLayout = new GlyphLayout(fontLarge, title);
-        fontLarge.draw(game.batch, title, centerX - (titleLayout.width / 2f), centerY + 150);
+        fontLarge.draw(game.batch, "GAME OVER", centerX - (titleLayout.width / 2f), centerY + 150);
 
-        // Draw Winner & Scores
-        String winnerText = (scoreP1 > scoreP2) ? "PLAYER 1 WINS!"
-                : (scoreP2 > scoreP1) ? "PLAYER 2 WINS!" : "IT'S A TIE!";
         fontMedium.setColor(Color.WHITE);
-        GlyphLayout winnerLayout = new GlyphLayout(fontMedium, winnerText);
         fontMedium.draw(game.batch, winnerText, centerX - (winnerLayout.width / 2f), centerY + 70);
-
-        String scoreText = "P1: " + scoreP1 + "   -   P2: " + scoreP2;
-        GlyphLayout scoreLayout = new GlyphLayout(fontMedium, scoreText);
         fontMedium.draw(game.batch, scoreText, centerX - (scoreLayout.width / 2f), centerY);
 
-        // --- DYNAMIC UI STATE ---
         if (enteringP1Name || enteringP2Name) {
-            // Draw Typing Prompt
             fontMedium.setColor(Color.YELLOW);
             String promptText = enteringP1Name ? "NEW RECORD P1! ENTER NAME:" : "NEW RECORD P2! ENTER NAME:";
-            GlyphLayout promptLayout = new GlyphLayout(fontMedium, promptText);
-            fontMedium.draw(game.batch, promptText, centerX - (promptLayout.width / 2f), centerY - 80);
 
-            // Draw the typed name with a classic blinking cursor effect
+            // Reutiliza dynamicLayout para o prompt
+            dynamicLayout.setText(fontMedium, promptText);
+            fontMedium.draw(game.batch, promptText, centerX - (dynamicLayout.width / 2f), centerY - 80);
+
+            // Reutiliza dynamicLayout para o nome digitado
             String displayName = currentName + (System.currentTimeMillis() % 1000 < 500 ? "_" : "");
-            GlyphLayout nameLayout = new GlyphLayout(fontMedium, displayName);
-            fontMedium.draw(game.batch, displayName, centerX - (nameLayout.width / 2f), centerY - 130);
+            dynamicLayout.setText(fontMedium, displayName);
+            fontMedium.draw(game.batch, displayName, centerX - (dynamicLayout.width / 2f), centerY - 130);
 
         } else {
-            // Draw Menu Options only when not typing
             fontMedium.setColor(Color.WHITE);
-            String opt1 = "[1] Play Again";
-            String opt2 = "[2] Main Menu";
-            fontMedium.draw(game.batch, opt1, centerX - (new GlyphLayout(fontMedium, opt1).width / 2f), centerY - 100);
-            fontMedium.draw(game.batch, opt2, centerX - (new GlyphLayout(fontMedium, opt2).width / 2f), centerY - 150);
+            fontMedium.draw(game.batch, opt1, centerX - (opt1Layout.width / 2f), centerY - 100);
+            fontMedium.draw(game.batch, opt2, centerX - (opt2Layout.width / 2f), centerY - 150);
 
-            // Input handling for menu
             if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1) || Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_1)) {
                 game.setScreen(new GameScreen(game));
                 dispose();
@@ -112,6 +122,11 @@ public class GameOverScreen implements Screen {
 
     @Override
     public void show() {
+
+        if (soundManager != null) {
+            soundManager.playDeathSound();
+        }
+
         // Check who deserves a high score right when the screen loads
         boolean p1Worthy = HighScoreManager.isHighScore(scoreP1);
         boolean p2Worthy = HighScoreManager.isHighScore(scoreP2);
@@ -193,5 +208,9 @@ public class GameOverScreen implements Screen {
         fontMedium.dispose();
         // Ensure we don't leave the keyboard locked if the screen is destroyed early
         Gdx.input.setInputProcessor(null);
+
+        if (soundManager != null) {
+            soundManager.dispose();
+        }
     }
 }

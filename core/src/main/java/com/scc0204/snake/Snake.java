@@ -14,13 +14,13 @@ public class Snake extends Entity {
     private Direction currentDirection;
 
     private float moveTimer = 0;
-    private float currentMoveTime = GameSettings.STARTING_SPEED;
-
+    private float currentMoveTime;
     // REPLACED: Swapped 'justAte' boolean flag for an integer counter for pending
     // segment changes
     private int pendingGrowth = 0;
 
     private boolean isDead = false;
+    private boolean diedBySuicide = false;
 
     // World Boundaries
     private WorldBounds bounds;
@@ -38,12 +38,13 @@ public class Snake extends Entity {
         }
     }
 
-    public Snake(int startX, int startY, Color color, WorldBounds bounds, Direction startDir) {
+    public Snake(int startX, int startY, Color color, WorldBounds bounds, Direction startDir, float startingSpeed) {
         super(startX, startY);
         this.color = color;
         this.body = new LinkedList<>();
         this.bounds = bounds;
         this.body.add(new SnakeSegment(startX, startY));
+        this.currentMoveTime = startingSpeed;
 
         switch (startDir) {
             case RIGHT:
@@ -114,6 +115,7 @@ public class Snake extends Entity {
         for (SnakeSegment segment : body) {
             if (segment.x == nextX && segment.y == nextY) {
                 this.isDead = true;
+                this.diedBySuicide = true;
                 return;
             }
         }
@@ -138,7 +140,6 @@ public class Snake extends Entity {
 
     /**
      * Handles dynamic snake sizing when special food is consumed.
-     * Replaces the old 'eat()' method.
      */
     public void modifySize(int sizeChange) {
         this.pendingGrowth += sizeChange;
@@ -167,4 +168,9 @@ public class Snake extends Entity {
     public Direction getCurrentDirection() {
         return currentDirection;
     }
+
+    public boolean didDieBySuicide() {
+        return diedBySuicide;
+    }
 }
+

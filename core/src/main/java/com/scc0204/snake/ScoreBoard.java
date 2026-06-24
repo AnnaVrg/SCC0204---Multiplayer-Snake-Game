@@ -16,6 +16,10 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 public class ScoreBoard {
     private BitmapFont font;
 
+    private GlyphLayout p2Layout;
+    private int lastScoreP2 = -1;
+    private String p2Text = "P2 Score: 0";
+
     public ScoreBoard() {
 
         // Load the .ttf file from the assets folder (ensure the file name matches
@@ -32,6 +36,8 @@ public class ScoreBoard {
 
         // Free the generator from memory to prevent leaks
         generator.dispose();
+
+        p2Layout = new GlyphLayout();
     }
 
     /**
@@ -48,9 +54,12 @@ public class ScoreBoard {
         font.draw(batch, p1Text, 20, screenHeight - 20);
 
         // --- PLAYER 2 SCORE (Right Aligned) ---
-        font.setColor(Color.WHITE);
-        String p2Text = "P2 Score: " + scoreP2;
-        GlyphLayout p2Layout = new GlyphLayout(font, p2Text);
+
+        if (scoreP2 != lastScoreP2) {
+            p2Text = "P2 Score: " + scoreP2;
+            p2Layout.setText(font, p2Text); // Reaproveita o objeto na memória
+            lastScoreP2 = scoreP2;
+        }
         // Dynamically calculate X to perfectly fit the text with a 20px margin
         float p2X = screenWidth - p2Layout.width - 20;
         font.draw(batch, p2Text, p2X, screenHeight - 20);

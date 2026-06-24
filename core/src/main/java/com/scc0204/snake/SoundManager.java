@@ -4,73 +4,60 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 
-/**
- * Manages the audio playback using LibGDX native audio system.
- * Includes safety checks to prevent crashes if files are missing.
- */
 public class SoundManager {
-
     private Music backgroundMusic;
+    private Sound biteSound;
+    private Sound deathSound;
 
-    /**
-     * Plays the food eating sound effect exactly once.
-     *
-     * @param filePath Name of the file inside the assets folder
-     */
-    public void playBiteSound(String filePath) {
+    public SoundManager() {
+        // Carrega os sons para a memória apenas uma vez
         try {
-            if (Gdx.files.internal(filePath).exists()) {
-                Sound biteSound = Gdx.audio.newSound(Gdx.files.internal(filePath));
-                biteSound.play();
-            } else {
-                System.out.println("Audio file missing, skipping: " + filePath);
+            if (Gdx.files.internal("AppleBite.WAV").exists()) {
+                biteSound = Gdx.audio.newSound(Gdx.files.internal("AppleBite.WAV"));
+            }
+            if (Gdx.files.internal("Death.WAV").exists()) {
+                deathSound = Gdx.audio.newSound(Gdx.files.internal("Death.WAV"));
             }
         } catch (Exception e) {
-            System.err.println("Error playing sound effect: " + e.getMessage());
+            System.err.println("Erro ao carregar os efeitos sonoros: " + e.getMessage());
         }
     }
 
-    /**
-     * MODIFIED: Plays the death/collision sound exactly once.
-     *
-     * @param filePath Name of the file inside the assets folder (e.g., "Death.WAV")
-     */
-    public void playDeathSound(String filePath) {
-        try {
-            if (Gdx.files.internal(filePath).exists()) {
-                Sound deathSound = Gdx.audio.newSound(Gdx.files.internal(filePath));
-                deathSound.play();
-            } else {
-                System.out.println("Death sound file missing, skipping: " + filePath);
-            }
-        } catch (Exception e) {
-            System.err.println("Error playing death sound: " + e.getMessage());
-        }
+    public void playBiteSound() {
+        if (biteSound != null)
+            biteSound.play();
     }
 
-    /**
-     * Starts playing the background music in a continuous loop.
-     *
-     * @param filePath Name of the file inside the assets folder
-     */
+    public void playDeathSound() {
+        if (deathSound != null)
+            deathSound.play();
+    }
+
     public void playBackgroundMusic(String filePath) {
         try {
             if (Gdx.files.internal(filePath).exists()) {
                 backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal(filePath));
                 backgroundMusic.setLooping(true);
                 backgroundMusic.play();
-            } else {
-                System.out.println("Music file missing, skipping: " + filePath);
             }
         } catch (Exception e) {
-            System.err.println("Error playing background music: " + e.getMessage());
+            System.err.println("Erro ao tocar música de fundo: " + e.getMessage());
         }
     }
 
     public void stopBackgroundMusic() {
         if (backgroundMusic != null && backgroundMusic.isPlaying()) {
             backgroundMusic.stop();
-            backgroundMusic.dispose();
         }
+    }
+
+    // Método super importante para liberar a RAM quando o jogo fechar
+    public void dispose() {
+        if (biteSound != null)
+            biteSound.dispose();
+        if (deathSound != null)
+            deathSound.dispose();
+        if (backgroundMusic != null)
+            backgroundMusic.dispose();
     }
 }

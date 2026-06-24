@@ -16,115 +16,128 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import java.util.ArrayList;
 
 public class HighScoreScreen implements Screen {
-  private final SnakeGame game;
-  private OrthographicCamera camera;
-  private Viewport viewport;
-  private BitmapFont fontTitle;
-  private BitmapFont fontScore;
-  private ArrayList<HighScoreManager.ScoreEntry> topScores;
+    private final SnakeGame game;
+    private OrthographicCamera camera;
+    private Viewport viewport;
+    private BitmapFont fontTitle;
+    private BitmapFont fontScore;
+    private ArrayList<HighScoreManager.ScoreEntry> topScores;
 
-  public HighScoreScreen(SnakeGame game) {
-    this.game = game;
+    private GlyphLayout titleLayout, emptyLayout, promptLayout;
+    private GlyphLayout[] scoreLayouts;
+    private String[] scoreTexts;
 
-    camera = new OrthographicCamera();
-    viewport = new FitViewport(GameScreen.V_WIDTH, GameScreen.V_HEIGHT, camera);
+    private final String title = "TOP 5 SCORES";
+    private final String emptyText = "No scores yet!";
+    private final String prompt = "Press BACKSPACE or ESC to return";
 
-    FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("Kenney Pixel.ttf"));
+    public HighScoreScreen(SnakeGame game) {
+        this.game = game;
 
-    // Font for the Title
-    FreeTypeFontParameter paramTitle = new FreeTypeFontParameter();
-    paramTitle.size = 80;
-    paramTitle.color = Color.YELLOW;
-    fontTitle = generator.generateFont(paramTitle);
+        camera = new OrthographicCamera();
+        viewport = new FitViewport(GameScreen.V_WIDTH, GameScreen.V_HEIGHT, camera);
 
-    // Font for the Scores
-    FreeTypeFontParameter paramScore = new FreeTypeFontParameter();
-    paramScore.size = 50;
-    paramScore.color = Color.WHITE;
-    fontScore = generator.generateFont(paramScore);
+        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("Kenney Pixel.ttf"));
 
-    generator.dispose();
+        // Font for the Title
+        FreeTypeFontParameter paramTitle = new FreeTypeFontParameter();
+        paramTitle.size = 80;
+        paramTitle.color = Color.YELLOW;
+        fontTitle = generator.generateFont(paramTitle);
 
-    // Load the scores from our manager class when the screen is created
-    topScores = HighScoreManager.getHighScores();
-  }
+        // Font for the Scores
+        FreeTypeFontParameter paramScore = new FreeTypeFontParameter();
+        paramScore.size = 50;
+        paramScore.color = Color.WHITE;
+        fontScore = generator.generateFont(paramScore);
 
-  @Override
-  public void render(float delta) {
-    ScreenUtils.clear(0, 0, 0, 1);
-    camera.update();
-    game.batch.setProjectionMatrix(camera.combined);
-    game.batch.begin();
+        generator.dispose();
 
-    float centerX = GameScreen.V_WIDTH / 2f;
-    float startY = GameScreen.V_HEIGHT - 100;
+        // Load the scores from our manager class when the screen is created
+        topScores = HighScoreManager.getHighScores();
 
-    // Draw Title
-    String title = "TOP 5 SCORES";
-    GlyphLayout titleLayout = new GlyphLayout(fontTitle, title);
-    fontTitle.draw(game.batch, title, centerX - (titleLayout.width / 2f), startY);
+        // Calculando os layouts fixos
+        titleLayout = new GlyphLayout(fontTitle, title);
+        emptyLayout = new GlyphLayout(fontScore, emptyText);
 
-    // Draw Scores iteratively
-    float scoreY = startY - 120;
-    if (topScores.isEmpty()) {
-      String emptyText = "No scores yet!";
-      GlyphLayout emptyLayout = new GlyphLayout(fontScore, emptyText);
-      fontScore.draw(game.batch, emptyText, centerX - (emptyLayout.width / 2f), scoreY);
-    } else {
-      // Loop through the objects to format the string
-      for (int i = 0; i < topScores.size(); i++) {
-        HighScoreManager.ScoreEntry entry = topScores.get(i);
+        // Cuidado especial com a escala do prompt
+        fontScore.getData().setScale(0.7f);
+        promptLayout = new GlyphLayout(fontScore, prompt);
+        fontScore.getData().setScale(1f); // Reseta a escala logo após
 
-        // Format: "1. NAME - 15 PTS (21/06/2026)"
-        String scoreText = (i + 1) + ". " + entry.name + " - " + entry.score + " PTS (" + entry.date + ")";
-
-        GlyphLayout scoreLayout = new GlyphLayout(fontScore, scoreText);
-        fontScore.draw(game.batch, scoreText, centerX - (scoreLayout.width / 2f), scoreY);
-        scoreY -= 60;
-      }
+        // Pre-calculando as strings de pontuação e seus tamanhos
+        if (!topScores.isEmpty()) {
+            scoreTexts = new String[topScores.size()];
+            scoreLayouts = new GlyphLayout[topScores.size()];
+            for (int i = 0; i < topScores.size(); i++) {
+                HighScoreManager.ScoreEntry entry = topScores.get(i);
+                scoreTexts[i] = (i + 1) + ". " + entry.name + " - " + entry.score + " PTS (" + entry.date + ")";
+                scoreLayouts[i] = new GlyphLayout(fontScore, scoreTexts[i]);
+            }
+        }
     }
 
-    // Draw Exit Prompt
-    fontScore.getData().setScale(0.7f); // Scale down slightly for the prompt
-    String prompt = "Press BACKSPACE or ESC to return";
-    GlyphLayout promptLayout = new GlyphLayout(fontScore, prompt);
-    fontScore.draw(game.batch, prompt, centerX - (promptLayout.width / 2f), 80);
-    fontScore.getData().setScale(1f); // Reset scale
+    @Override
+    public void render(float delta) {
+        ScreenUtils.clear(0, 0, 0, 1);
+        camera.update();
+        game.batch.setProjectionMatrix(camera.combined);
+        game.batch.begin();
 
-    game.batch.end();
+        float centerX = GameScreen.V_WIDTH / 2f;
+        float startY = GameScreen.V_HEIGHT - 100;
 
-    // --- INPUT HANDLING ---
-    if (Gdx.input.isKeyJustPressed(Input.Keys.BACKSPACE) || Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-      game.setScreen(new MainMenuScreen(game));
-      dispose();
+        fontTitle.draw(game.batch, title, centerX - (titleLayout.width / 2f), startY);
+
+        float scoreY = startY - 120;
+        if (topScores.isEmpty()) {
+            fontScore.draw(game.batch, emptyText, centerX - (emptyLayout.width / 2f), scoreY);
+        } else {
+            for (int i = 0; i < topScores.size(); i++) {
+                fontScore.draw(game.batch, scoreTexts[i], centerX - (scoreLayouts[i].width / 2f), scoreY);
+                scoreY -= 60;
+            }
+        }
+
+        fontScore.getData().setScale(0.7f);
+        fontScore.draw(game.batch, prompt, centerX - (promptLayout.width / 2f), 80);
+        fontScore.getData().setScale(1f);
+        fontScore.getData().setScale(1f); // Reset scale
+
+        game.batch.end();
+
+        // --- INPUT HANDLING ---
+        if (Gdx.input.isKeyJustPressed(Input.Keys.BACKSPACE) || Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            game.setScreen(new MainMenuScreen(game));
+            dispose();
+        }
     }
-  }
 
-  @Override
-  public void resize(int width, int height) {
-    if (viewport != null)
-      viewport.update(width, height, true);
-  }
+    @Override
+    public void resize(int width, int height) {
+        if (viewport != null)
+            viewport.update(width, height, true);
+    }
 
-  @Override
-  public void show() {
-  }
+    @Override
+    public void show() {
+    }
 
-  @Override
-  public void pause() {
-  }
+    @Override
+    public void pause() {
+    }
 
-  @Override
-  public void resume() {
-  }
+    @Override
+    public void resume() {
+    }
 
-  @Override
-  public void hide() {
-  }
+    @Override
+    public void hide() {
+    }
 
-  @Override
-  public void dispose() {
-    fontTitle.dispose();
-    fontScore.dispose();
-  }
+    @Override
+    public void dispose() {
+        fontTitle.dispose();
+        fontScore.dispose();
+    }
 }

@@ -14,6 +14,11 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
+/**
+ * Handles the Game Over screen logic, including score display,
+ * high score entry, and menu navigation.
+ */
+
 public class GameOverScreen implements Screen {
     private final SnakeGame game;
     private OrthographicCamera camera;
@@ -28,14 +33,21 @@ public class GameOverScreen implements Screen {
 
     private SoundManager soundManager;
 
-    // Otimização: Layouts estáticos
+    // Cached layouts for static and dynamic text
     private GlyphLayout titleLayout, winnerLayout, scoreLayout, opt1Layout, opt2Layout;
-    // Otimização: Layout que será reaproveitado para as partes dinâmicas
     private GlyphLayout dynamicLayout;
 
     private String winnerText, scoreText;
     private final String opt1 = "[1] Play Again";
     private final String opt2 = "[2] Main Menu";
+
+    /**
+     * Constructs the Game Over screen with final player scores.
+     *
+     * @param game    Reference to the main game instance.
+     * @param scoreP1 Final score of Player 1.
+     * @param scoreP2 Final score of Player 2.
+     */
 
     public GameOverScreen(SnakeGame game, int scoreP1, int scoreP2) {
         this.game = game;
@@ -46,6 +58,7 @@ public class GameOverScreen implements Screen {
         camera = new OrthographicCamera();
         viewport = new FitViewport(GameScreen.V_WIDTH, GameScreen.V_HEIGHT, camera);
 
+        // Load arcade font assets
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("Kenney Pixel.ttf"));
 
         FreeTypeFontParameter paramLarge = new FreeTypeFontParameter();
@@ -58,6 +71,7 @@ public class GameOverScreen implements Screen {
         paramMedium.color = Color.WHITE;
         fontMedium = generator.generateFont(paramMedium);
 
+        // Initialize cached layouts
         dynamicLayout = new GlyphLayout();
 
         titleLayout = new GlyphLayout(fontLarge, "GAME OVER");
@@ -70,9 +84,14 @@ public class GameOverScreen implements Screen {
 
         opt1Layout = new GlyphLayout(fontMedium, opt1);
         opt2Layout = new GlyphLayout(fontMedium, opt2);
-        ;
+
+        generator.dispose();
     }
 
+    /**
+     * {@inheritDoc}
+     * Renders the UI and processes menu inputs.
+     */
     @Override
     public void render(float delta) {
         ScreenUtils.clear(0, 0, 0, 1);
@@ -83,21 +102,21 @@ public class GameOverScreen implements Screen {
         float centerX = GameScreen.V_WIDTH / 2f;
         float centerY = GameScreen.V_HEIGHT / 2f;
 
+        // Draw headers
         fontLarge.draw(game.batch, "GAME OVER", centerX - (titleLayout.width / 2f), centerY + 150);
-
         fontMedium.setColor(Color.WHITE);
         fontMedium.draw(game.batch, winnerText, centerX - (winnerLayout.width / 2f), centerY + 70);
         fontMedium.draw(game.batch, scoreText, centerX - (scoreLayout.width / 2f), centerY);
 
+        // Handle high score entry or menu options
         if (enteringP1Name || enteringP2Name) {
             fontMedium.setColor(Color.YELLOW);
             String promptText = enteringP1Name ? "NEW RECORD P1! ENTER NAME:" : "NEW RECORD P2! ENTER NAME:";
 
-            // Reutiliza dynamicLayout para o prompt
             dynamicLayout.setText(fontMedium, promptText);
             fontMedium.draw(game.batch, promptText, centerX - (dynamicLayout.width / 2f), centerY - 80);
 
-            // Reutiliza dynamicLayout para o nome digitado
+            // Blinking cursor effect
             String displayName = currentName + (System.currentTimeMillis() % 1000 < 500 ? "_" : "");
             dynamicLayout.setText(fontMedium, displayName);
             fontMedium.draw(game.batch, displayName, centerX - (dynamicLayout.width / 2f), centerY - 130);
@@ -107,6 +126,7 @@ public class GameOverScreen implements Screen {
             fontMedium.draw(game.batch, opt1, centerX - (opt1Layout.width / 2f), centerY - 100);
             fontMedium.draw(game.batch, opt2, centerX - (opt2Layout.width / 2f), centerY - 150);
 
+            // Handle navigation inputs
             if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1) || Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_1)) {
                 game.setScreen(new GameScreen(game));
                 dispose();
@@ -120,14 +140,19 @@ public class GameOverScreen implements Screen {
         game.batch.end();
     }
 
+    /**
+     * {@inheritDoc}
+     * Plays death sound and checks for high score eligibility.
+     */
     @Override
     public void show() {
 
+        // Trigger death sound effect on screen display
         if (soundManager != null) {
             soundManager.playDeathSound();
         }
 
-        // Check who deserves a high score right when the screen loads
+        // Evaluate high score eligibility
         boolean p1Worthy = HighScoreManager.isHighScore(scoreP1);
         boolean p2Worthy = HighScoreManager.isHighScore(scoreP2);
 
@@ -141,8 +166,10 @@ public class GameOverScreen implements Screen {
     }
 
     /**
-     * Sets up a LibGDX InputAdapter to capture raw keystrokes directly on the
-     * screen.
+     * Configures input processing to capture player name entry via keyboard.
+     *
+     * @param checkP2Next Boolean flag indicating if Player 2 also achieved a high
+     *                    score.
      */
     private void setupInputProcessor(final boolean checkP2Next) {
         Gdx.input.setInputProcessor(new InputAdapter() {
@@ -165,6 +192,11 @@ public class GameOverScreen implements Screen {
         });
     }
 
+    /**
+     * Persists the entered name to the high score registry.
+     *
+     * @param checkP2Next Boolean flag indicating if P2 score entry should follow.
+     */
     private void saveCurrentName(boolean checkP2Next) {
         if (enteringP1Name) {
             // Automatically convert to uppercase for that arcade aesthetic
@@ -184,6 +216,7 @@ public class GameOverScreen implements Screen {
         }
     }
 
+    /** {@inheritDoc} */
     @Override
     public void resize(int width, int height) {
         if (viewport != null)
@@ -202,11 +235,11 @@ public class GameOverScreen implements Screen {
     public void hide() {
     }
 
+    /** {@inheritDoc} */
     @Override
     public void dispose() {
         fontLarge.dispose();
         fontMedium.dispose();
-        // Ensure we don't leave the keyboard locked if the screen is destroyed early
         Gdx.input.setInputProcessor(null);
 
         if (soundManager != null) {

@@ -1,26 +1,33 @@
 package com.scc0204.snake;
 
 /**
- * Global settings configuration for the game.
- * Now completely instantiable to ensure testability and prevent global state
- * leaks.
+ * Manages game configuration settings.
+ * This class is designed to be instantiable to ensure testability and
+ * avoid global state conflicts during runtime.
  */
 public class GameSettings {
 
-    // Variáveis agora são privadas e instanciáveis (não estáticas)
+    // Grid dimensions and movement timing
     private int tileSize = 32;
     private float startingSpeed = 0.15f;
 
-    // Getters para acessar os valores com segurança
+    /**
+     * @return The current tile size in pixels.
+     */
     public int getTileSize() {
         return tileSize;
     }
 
+    /**
+     * @return The initial movement interval in seconds.
+     */
     public float getStartingSpeed() {
         return startingSpeed;
     }
 
-    // Os métodos deixam de ser static
+    /**
+     * Cycles through available grid sizes: 32 (Normal), 16 (Large), 40 (Small).
+     */
     public void toggleGridSize() {
         if (tileSize == 32)
             tileSize = 16;
@@ -30,6 +37,10 @@ public class GameSettings {
             tileSize = 32;
     }
 
+    /**
+     * Cycles through available speed presets: 0.15s (Normal), 0.10s (Fast), 0.20s
+     * (Slow).
+     */
     public void toggleSpeed() {
         if (startingSpeed == 0.15f)
             startingSpeed = 0.10f;
@@ -39,6 +50,9 @@ public class GameSettings {
             startingSpeed = 0.15f;
     }
 
+    /**
+     * @return A descriptive name for the current grid size setting.
+     */
     public String getGridSizeName() {
         if (tileSize == 40)
             return "SMALL";
@@ -47,6 +61,9 @@ public class GameSettings {
         return "LARGE";
     }
 
+    /**
+     * @return A descriptive name for the current speed setting.
+     */
     public String getSpeedName() {
         if (startingSpeed == 0.20f)
             return "SLOW";
@@ -55,7 +72,10 @@ public class GameSettings {
         return "FAST";
     }
 
-    // Método extra muito útil para testes unitários: reseta o estado
+    /**
+     * Resets settings to their default values.
+     * Useful for unit testing and restoring state.
+     */
     public void resetToDefaults() {
         tileSize = 32;
         startingSpeed = 0.15f;

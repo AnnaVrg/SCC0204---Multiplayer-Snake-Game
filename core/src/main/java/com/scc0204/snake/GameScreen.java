@@ -14,9 +14,8 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 /**
- * The main screen where the gameplay loop takes place.
- * Uses SpriteBatch and TextureRegion to handle 16x16 pixel art with directional
- * rotations.
+ * Manages the core gameplay loop, including input handling, entity updates,
+ * collision detection, and rendering the game world.
  */
 public class GameScreen extends ScreenAdapter {
 
@@ -36,20 +35,20 @@ public class GameScreen extends ScreenAdapter {
     private Food apple;
     private SoundManager soundManager;
 
-    private int scoreP1 = 0;
-    private int scoreP2 = 0;
-
     private ScoreBoard scoreBoard;
     private PauseMenu pauseMenu;
 
-    // Constantes para as probabilidades (em porcentagem)
     private static final int CHANCE_GOLDEN = 10; // 10% de chance
     private static final int CHANCE_ROTTEN = 20; // 20% de chance
     private static final int PENALTY_SUICIDE = 10;
 
-    // Instância única do gerador de números aleatórios (reutilizada sempre)
     private final java.util.Random random = new java.util.Random();
 
+    /**
+     * Initializes gameplay resources, UI components, and game entities.
+     *
+     * @param game Reference to the main game instance.
+     */
     public GameScreen(SnakeGame game) {
         this.game = game;
         this.batch = game.batch;
@@ -57,6 +56,7 @@ public class GameScreen extends ScreenAdapter {
         camera = new OrthographicCamera();
         viewport = new FitViewport(V_WIDTH, V_HEIGHT, camera);
 
+        // Loading the textures
         headTex = new Texture("head.png");
         bodyTex = new Texture("body.png");
         tailTex = new Texture("tail.png");
@@ -92,6 +92,9 @@ public class GameScreen extends ScreenAdapter {
         soundManager.playBackgroundMusic("GameMusic.WAV");
     }
 
+    /**
+     * Handles players inputs
+     */
     private void handleInput() {
         if (Gdx.input.isKeyJustPressed(Input.Keys.UP))
             player1.setDirection(Snake.Direction.UP);
@@ -112,6 +115,10 @@ public class GameScreen extends ScreenAdapter {
             player2.setDirection(Snake.Direction.RIGHT);
     }
 
+    /**
+     * {@inheritDoc}
+     * Executes the gameplay logic loop, collision checks, and render calls.
+     */
     @Override
     public void render(float delta) {
 
@@ -128,7 +135,7 @@ public class GameScreen extends ScreenAdapter {
                 player2.update(delta);
                 apple.update(delta);
 
-                // --- CROSS-COLLISION CHECK ---
+                // Cross-snake collision
                 Snake.SnakeSegment p1Head = player1.getBody().getFirst();
                 Snake.SnakeSegment p2Head = player2.getBody().getFirst();
 
@@ -146,16 +153,13 @@ public class GameScreen extends ScreenAdapter {
                     }
                 }
 
-                // --- FOOD COLLISION ---
+                // Food collision logic
                 if (!player1.isDead()) {
                     if (p1Head.x == apple.getX() && p1Head.y == apple.getY()) {
                         soundManager.playBiteSound();
                         player1.modifySize(apple.getSizeChange());
 
-                        // MODIFIED: Locks score at 0 minimum
-                        scoreP1 += apple.getPoints();
-                        if (scoreP1 < 0)
-                            scoreP1 = 0;
+                        scoreBoard.addScoreP1(apple.getPoints());
 
                         spawnNewApple();
                     }
@@ -166,35 +170,30 @@ public class GameScreen extends ScreenAdapter {
                         soundManager.playBiteSound();
                         player2.modifySize(apple.getSizeChange());
 
-                        // MODIFIED: Locks score at 0 minimum
-                        scoreP2 += apple.getPoints();
-                        if (scoreP2 < 0)
-                            scoreP2 = 0;
+                        // Locks score at 0 minimum
+                        scoreBoard.addScoreP2(apple.getPoints());
 
                         spawnNewApple();
                     }
                 }
 
             } else {
-                // --- GAME OVER STATE ---
+                // Game Over State
                 soundManager.stopBackgroundMusic();
 
-                // Aplica a penalidade e trava no zero caso a cobra tenha se suicidado
                 if (player1.didDieBySuicide()) {
-                    scoreP1 = Math.max(0, scoreP1 - PENALTY_SUICIDE);
+                    scoreBoard.addScoreP1(-PENALTY_SUICIDE);
                 }
-
                 if (player2.didDieBySuicide()) {
-                    scoreP2 = Math.max(0, scoreP2 - PENALTY_SUICIDE);
+                    scoreBoard.addScoreP2(-PENALTY_SUICIDE);
                 }
-
-                game.setScreen(new GameOverScreen(game, scoreP1, scoreP2));
+                game.setScreen(new GameOverScreen(game, scoreBoard.getScoreP1(), scoreBoard.getScoreP2()));
                 dispose();
                 return;
             }
         }
 
-        // --- RENDERING ---
+        // Rendering
         ScreenUtils.clear(0, 0, 0, 1);
         camera.update();
         batch.setProjectionMatrix(camera.combined);
@@ -242,7 +241,7 @@ public class GameScreen extends ScreenAdapter {
 
         drawSnake(player1);
         drawSnake(player2);
-        scoreBoard.draw(batch, scoreP1, scoreP2);
+        scoreBoard.draw(batch);
         boolean wantsToQuit = pauseMenu.updateAndDraw(batch, V_WIDTH, V_HEIGHT);
 
         batch.end();
@@ -254,20 +253,32 @@ public class GameScreen extends ScreenAdapter {
         }
     }
 
+    /**
+     * Spawns a new fruit on the grid, applying probabilistic logic for special
+     * apple types.
+     */
     private void spawnNewApple() {
-        // Sorteia um número de 0 a 99 usando a instância já existente
+        // Roll a random number between 0 and 99
         int chance = random.nextInt(100);
 
-        // Lógica com as constantes nomeadas
+        // Apply probability logic to determine apple type
         if (chance < CHANCE_GOLDEN) {
             apple.respawnAs(Food.AppleType.GOLDEN);
         } else if (chance < (CHANCE_GOLDEN + CHANCE_ROTTEN)) {
             apple.respawnAs(Food.AppleType.ROTTEN);
         } else {
-            apple.respawn(); // Maçã normal
+            apple.respawn();
         }
     }
 
+    /**
+     * Calculates the rotation angle required for the snake's tail based on its
+     * preceding segment.
+     *
+     * @param from The current segment (tail).
+     * @param to   The segment immediately preceding the tail.
+     * @return The rotation angle in degrees.
+     */
     private float getDirectionRotation(Snake.SnakeSegment from, Snake.SnakeSegment to) {
         if (to.x > from.x)
             return 0f;
@@ -280,6 +291,15 @@ public class GameScreen extends ScreenAdapter {
         return 0f;
     }
 
+    /**
+     * Calculates the rotation angle for snake corner segments to ensure smooth
+     * visuals.
+     * * @param front The segment in front of the corner.
+     *
+     * @param current The corner segment itself.
+     * @param back    The segment behind the corner.
+     * @return The rotation angle in degrees.
+     */
     private float getCornerRotation(Snake.SnakeSegment front, Snake.SnakeSegment current, Snake.SnakeSegment back) {
         boolean up = (front.y > current.y) || (back.y > current.y);
         boolean down = (front.y < current.y) || (back.y < current.y);
@@ -298,6 +318,12 @@ public class GameScreen extends ScreenAdapter {
         return 0f;
     }
 
+    /**
+     * Renders the entire snake body, including the head, tail, and corner segments.
+     *
+     * @param player The Snake instance to render.
+     */
+
     private void drawSnake(Snake player) {
         batch.setColor(player.getColor());
         LinkedList<Snake.SnakeSegment> body = player.getBody();
@@ -309,12 +335,12 @@ public class GameScreen extends ScreenAdapter {
 
             TextureRegion regionToDraw;
             float rotation = 0f;
-
+            // Handle Head segment
             if (i == 0) {
                 regionToDraw = headRegion;
                 Snake.SnakeSegment head = body.get(0);
 
-                // MODIFIED: Fixes rendering crash when snake size is 1
+                // Fixes rendering crash when snake size is 1
                 if (body.size() > 1) {
                     Snake.SnakeSegment next = body.get(1);
                     if (next.x > head.x)
@@ -342,11 +368,15 @@ public class GameScreen extends ScreenAdapter {
                     }
                 }
 
+                // Handle Tail segment
             } else if (i == body.size() - 1) {
                 regionToDraw = tailRegion;
                 Snake.SnakeSegment front = body.get(i - 1);
                 rotation = getDirectionRotation(segment, front);
-            } else {
+            }
+
+            // Handle Body and Corner segments
+            else {
                 Snake.SnakeSegment front = body.get(i - 1);
                 Snake.SnakeSegment back = body.get(i + 1);
 
@@ -367,11 +397,18 @@ public class GameScreen extends ScreenAdapter {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height, true);
     }
 
+    /**
+     * {@inheritDoc}
+     * Disposes of texture resources and dependencies to free system memory.
+     */
     @Override
     public void dispose() {
         headTex.dispose();
@@ -389,5 +426,6 @@ public class GameScreen extends ScreenAdapter {
         if (soundManager != null) {
             soundManager.dispose();
         }
+
     }
 }

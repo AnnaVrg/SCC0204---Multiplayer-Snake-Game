@@ -8,6 +8,12 @@ public abstract class Entity {
     protected int x;
     protected int y;
 
+    /**
+     * Initializes the entity at the specified grid position.
+     *
+     * @param x The initial X grid coordinate.
+     * @param y The initial Y grid coordinate.
+     */
     public Entity(int x, int y) {
         this.x = x;
         this.y = y;
@@ -21,13 +27,20 @@ public abstract class Entity {
         return y;
     }
 
+    /**
+     * Updates the entity's position on the grid.
+     *
+     * @param x The new X coordinate.
+     * @param y The new Y coordinate.
+     */
     public void setPosition(int x, int y) {
         this.x = x;
         this.y = y;
     }
 
     /**
-     * Updates the entity's logic.
+     * Updates the entity's logic. This method must be implemented by subclasses
+     * to define specific behaviors (e.g., movement, growth, or logic).
      *
      * @param deltaTime The time elapsed since the last frame (in seconds).
      */

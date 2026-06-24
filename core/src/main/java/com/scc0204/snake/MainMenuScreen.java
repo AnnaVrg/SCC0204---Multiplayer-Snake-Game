@@ -13,15 +13,18 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
+/**
+ * Handles the main menu interface.
+ * Allows users to navigate to different game screens or exit the application.
+ */
 public class MainMenuScreen implements Screen {
-    // Reference to the main game class to allow screen switching
     private final SnakeGame game;
     private OrthographicCamera camera;
     private Viewport viewport;
     private BitmapFont fontTitle;
     private BitmapFont fontPrompt;
 
-    // Otimização: Variáveis estáticas de layout e texto
+    // Cached layout instances for optimized text rendering
     private GlyphLayout titleLayout, opt1Layout, opt2Layout, opt3Layout, opt4Layout, opt5Layout;
     private final String titleText = "MULTIPLAYER SNAKE";
     private final String opt1 = "[1] New Game";
@@ -30,22 +33,25 @@ public class MainMenuScreen implements Screen {
     private final String opt4 = "[4] Settings";
     private final String opt5 = "[5] Exit";
 
+    /**
+     * Constructs the main menu and initializes UI assets.
+     *
+     * @param game Reference to the main game instance.
+     */
     public MainMenuScreen(SnakeGame game) {
         this.game = game;
 
         camera = new OrthographicCamera();
-        // Use the same virtual resolution as the GameScreen for consistency
         viewport = new FitViewport(GameScreen.V_WIDTH, GameScreen.V_HEIGHT, camera);
 
-        // Generate the arcade font for the title
+        /// Initialize Title Font
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("Kenney Pixel.ttf"));
-
         FreeTypeFontParameter paramTitle = new FreeTypeFontParameter();
         paramTitle.size = 80;
         paramTitle.color = Color.GREEN;
         fontTitle = generator.generateFont(paramTitle);
 
-        // Generate a smaller font for the "Press Space" prompt
+        // Initialize Menu Font
         FreeTypeFontParameter paramPrompt = new FreeTypeFontParameter();
         paramPrompt.size = 40;
         paramPrompt.color = Color.WHITE;
@@ -53,6 +59,7 @@ public class MainMenuScreen implements Screen {
 
         generator.dispose();
 
+        // Calculate layouts for centralized drawing
         titleLayout = new GlyphLayout(fontTitle, titleText);
         opt1Layout = new GlyphLayout(fontPrompt, opt1);
         opt2Layout = new GlyphLayout(fontPrompt, opt2);
@@ -61,6 +68,10 @@ public class MainMenuScreen implements Screen {
         opt5Layout = new GlyphLayout(fontPrompt, opt5);
     }
 
+    /**
+     * {@inheritDoc}
+     * Renders the menu UI and processes navigation input.
+     */
     @Override
     public void render(float delta) {
         ScreenUtils.clear(0, 0, 0, 1);
@@ -72,8 +83,8 @@ public class MainMenuScreen implements Screen {
 
         float centerX = GameScreen.V_WIDTH / 2f;
 
+        // Draw Menu Components
         fontTitle.draw(game.batch, titleText, centerX - (titleLayout.width / 2f), GameScreen.V_HEIGHT / 1.5f);
-
         fontPrompt.setColor(Color.WHITE);
         fontPrompt.draw(game.batch, opt1, centerX - (opt1Layout.width / 2f), GameScreen.V_HEIGHT / 2.5f + 20);
         fontPrompt.draw(game.batch, opt2, centerX - (opt2Layout.width / 2f), GameScreen.V_HEIGHT / 2.5f - 40);
@@ -84,7 +95,7 @@ public class MainMenuScreen implements Screen {
 
         game.batch.end();
 
-        // --- INPUT HANDLING ---
+        // Handle navigation
         if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1) || Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_1)) {
             game.setScreen(new GameScreen(game));
             dispose();
@@ -102,6 +113,7 @@ public class MainMenuScreen implements Screen {
         }
     }
 
+    /** {@inheritDoc} */
     @Override
     public void resize(int width, int height) {
         if (viewport != null) {
@@ -125,6 +137,7 @@ public class MainMenuScreen implements Screen {
     public void hide() {
     }
 
+    /** {@inheritDoc} */
     @Override
     public void dispose() {
         fontTitle.dispose();

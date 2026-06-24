@@ -3,28 +3,45 @@ package com.scc0204.snake;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
+/**
+ * The main entry point for the Snake game.
+ * Extends the LibGDX Game class to manage screen transitions,
+ * shared rendering resources, and global game settings.
+ */
 public class SnakeGame extends Game {
-    // Public batch so screens can share the same rendering tool
+    /** Global SpriteBatch shared across all screens for optimized rendering. */
     public SpriteBatch batch;
+
+    /** Global settings instance for configuration management. */
     public GameSettings settings;
 
+    /**
+     * Initializes core game resources and sets the initial screen to the Main Menu.
+     */
     @Override
     public void create() {
         batch = new SpriteBatch();
         settings = new GameSettings();
-        // Start the application by showing the Main Menu
+
+        // Transition to the main menu upon startup
         this.setScreen(new MainMenuScreen(this));
     }
 
+    /**
+     * {@inheritDoc}
+     * Delegates rendering to the currently active screen.
+     */
     @Override
     public void render() {
-        // Important: delegates the render call to the currently active screen
         super.render();
     }
 
+    /**
+     * Disposes of global resources to prevent memory leaks.
+     */
     @Override
     public void dispose() {
         batch.dispose();
-        // The active screen is automatically disposed by the Game class
+        // The active screen is disposed of automatically by the Game class
     }
 }

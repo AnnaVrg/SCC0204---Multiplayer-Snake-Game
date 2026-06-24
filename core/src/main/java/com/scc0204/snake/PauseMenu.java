@@ -25,14 +25,19 @@ public class PauseMenu {
     private final String opt1Text = "[1] Resume";
     private final String opt2Text = "[2] Main Menu";
 
+    /**
+     * Initializes the Pause Menu, loading fonts and pre-calculating layouts.
+     */
     public PauseMenu() {
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("Kenney Pixel.ttf"));
 
+        // Configure Title Font
         FreeTypeFontParameter paramLarge = new FreeTypeFontParameter();
         paramLarge.size = 80;
         paramLarge.color = Color.YELLOW;
         fontLarge = generator.generateFont(paramLarge);
 
+        // Configure Option Font
         FreeTypeFontParameter paramMedium = new FreeTypeFontParameter();
         paramMedium.size = 40;
         paramMedium.color = Color.WHITE;
@@ -40,23 +45,33 @@ public class PauseMenu {
 
         generator.dispose();
 
+        // Initialize layouts for optimized rendering
         titleLayout = new GlyphLayout(fontLarge, "PAUSED");
         opt1Layout = new GlyphLayout(fontMedium, opt1Text);
         opt2Layout = new GlyphLayout(fontMedium, opt2Text);
     }
 
+    /**
+     * @return True if the game is currently paused.
+     */
     public boolean isPaused() {
         return isPaused;
     }
 
+    /**
+     * @return True if the game is currently paused.
+     */
     public void togglePause() {
         this.isPaused = !this.isPaused;
     }
 
     /**
-     * Draws the pause menu and checks for input.
+     * Renders the pause menu overlay and processes user menu navigation.
      *
-     * @return true if the user selected "Main Menu" and wants to quit the game.
+     * @param batch        The SpriteBatch used for drawing.
+     * @param screenWidth  The current viewport width.
+     * @param screenHeight The current viewport height.
+     * @return True if the user selected "Main Menu" and wants to exit the game.
      */
     public boolean updateAndDraw(SpriteBatch batch, float screenWidth, float screenHeight) {
         if (!isPaused)
@@ -65,11 +80,12 @@ public class PauseMenu {
         float centerX = screenWidth / 2f;
         float centerY = screenHeight / 2f;
 
+        // Render UI elements
         fontLarge.draw(batch, "PAUSED", centerX - (titleLayout.width / 2f), centerY + 100);
         fontMedium.draw(batch, opt1Text, centerX - (opt1Layout.width / 2f), centerY);
         fontMedium.draw(batch, opt2Text, centerX - (opt2Layout.width / 2f), centerY - 60);
 
-        // Menu Inputs
+        // Handle navigation inputs
         if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1) || Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_1)) {
             this.isPaused = false;
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_2) || Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_2)) {
@@ -79,6 +95,9 @@ public class PauseMenu {
         return false;
     }
 
+    /**
+     * Disposes of font assets to prevent memory leaks.
+     */
     public void dispose() {
         fontLarge.dispose();
         fontMedium.dispose();

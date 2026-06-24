@@ -11,7 +11,8 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 
 /**
  * Handles the Heads-Up Display (HUD).
- * Responsible for rendering the scores and the Game Over screen.
+ * Responsible for tracking, updating, and rendering player scores during
+ * gameplay.
  */
 public class ScoreBoard {
     private BitmapFont font;
@@ -19,14 +20,19 @@ public class ScoreBoard {
     private GlyphLayout p2Layout;
     private int lastScoreP2 = -1;
     private String p2Text = "P2 Score: 0";
+    private String p1Text = "P1 Score: 0";
 
+    private int scoreP1 = 0;
+    private int scoreP2 = 0;
+
+    /**
+     * Initializes the ScoreBoard by loading and generating the arcade font.
+     */
     public ScoreBoard() {
 
-        // Load the .ttf file from the assets folder (ensure the file name matches
-        // exactly)
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("Kenney Pixel.ttf"));
 
-        // Configure font parameters (like the size in pixels)
+        // Configure font parameters
         FreeTypeFontParameter parameter = new FreeTypeFontParameter();
         parameter.size = 32; // Tamanho ideal para placares arcade
         parameter.color = Color.WHITE; // Cor base
@@ -41,20 +47,49 @@ public class ScoreBoard {
     }
 
     /**
-     * Draws the current scores and the end-game state if applicable.
+     * Updates Player 1 score and ensures it never drops below zero.
+     *
+     * @param points The points to add or subtract.
      */
-    public void draw(SpriteBatch batch, int scoreP1, int scoreP2) {
+    public void addScoreP1(int points) {
+
+        scoreP1 = Math.max(0, scoreP1 + points);
+        p1Text = "P1 Score: " + scoreP1;
+    }
+
+    /**
+     * Updates Player 2 score and ensures it never drops below zero.
+     *
+     * @param points The points to add or subtract.
+     */
+    public void addScoreP2(int points) {
+        scoreP2 = Math.max(0, scoreP2 + points);
+    }
+
+    /** @return The current score for Player 1. */
+    public int getScoreP1() {
+        return scoreP1;
+    }
+
+    /** @return The current score for Player 2. */
+    public int getScoreP2() {
+        return scoreP2;
+    }
+
+    /**
+     * Renders the current scores on the screen using the game's SpriteBatch.
+     *
+     * @param batch The SpriteBatch instance used for drawing UI elements.
+     */
+    public void draw(SpriteBatch batch) {
         float screenWidth = GameScreen.V_WIDTH;
         float screenHeight = GameScreen.V_HEIGHT;
 
-        // --- PLAYER 1 SCORE (Left Aligned) ---
+        // Render Player 1 Score (Left Aligned)
         font.setColor(Color.WHITE);
-        String p1Text = "P1 Score: " + scoreP1;
-        // While x=20 is static, using the layout keeps the code standardized
         font.draw(batch, p1Text, 20, screenHeight - 20);
 
-        // --- PLAYER 2 SCORE (Right Aligned) ---
-
+        // Render Player 2 Score (Right Aligned)
         if (scoreP2 != lastScoreP2) {
             p2Text = "P2 Score: " + scoreP2;
             p2Layout.setText(font, p2Text); // Reaproveita o objeto na memória

@@ -15,6 +15,10 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 
 import java.util.ArrayList;
 
+/**
+ * Displays the Top 5 high scores retrieved from the HighScoreManager.
+ * Allows navigation back to the main menu.
+ */
 public class HighScoreScreen implements Screen {
     private final SnakeGame game;
     private OrthographicCamera camera;
@@ -23,6 +27,7 @@ public class HighScoreScreen implements Screen {
     private BitmapFont fontScore;
     private ArrayList<HighScoreManager.ScoreEntry> topScores;
 
+    // Layouts for efficient text rendering
     private GlyphLayout titleLayout, emptyLayout, promptLayout;
     private GlyphLayout[] scoreLayouts;
     private String[] scoreTexts;
@@ -31,6 +36,11 @@ public class HighScoreScreen implements Screen {
     private final String emptyText = "No scores yet!";
     private final String prompt = "Press BACKSPACE or ESC to return";
 
+    /**
+     * Initializes the High Score screen, loading existing records.
+     *
+     * @param game Reference to the main game instance.
+     */
     public HighScoreScreen(SnakeGame game) {
         this.game = game;
 
@@ -39,13 +49,13 @@ public class HighScoreScreen implements Screen {
 
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("Kenney Pixel.ttf"));
 
-        // Font for the Title
+        // Configure Title Font
         FreeTypeFontParameter paramTitle = new FreeTypeFontParameter();
         paramTitle.size = 80;
         paramTitle.color = Color.YELLOW;
         fontTitle = generator.generateFont(paramTitle);
 
-        // Font for the Scores
+        // Configure Score Font
         FreeTypeFontParameter paramScore = new FreeTypeFontParameter();
         paramScore.size = 50;
         paramScore.color = Color.WHITE;
@@ -53,19 +63,18 @@ public class HighScoreScreen implements Screen {
 
         generator.dispose();
 
-        // Load the scores from our manager class when the screen is created
+        // Retrieve data from manager
         topScores = HighScoreManager.getHighScores();
 
-        // Calculando os layouts fixos
+        // Initialize static layouts
         titleLayout = new GlyphLayout(fontTitle, title);
         emptyLayout = new GlyphLayout(fontScore, emptyText);
 
-        // Cuidado especial com a escala do prompt
         fontScore.getData().setScale(0.7f);
         promptLayout = new GlyphLayout(fontScore, prompt);
-        fontScore.getData().setScale(1f); // Reseta a escala logo após
+        fontScore.getData().setScale(1f);
 
-        // Pre-calculando as strings de pontuação e seus tamanhos
+        // Pre-calculate score strings for performance
         if (!topScores.isEmpty()) {
             scoreTexts = new String[topScores.size()];
             scoreLayouts = new GlyphLayout[topScores.size()];
@@ -77,6 +86,10 @@ public class HighScoreScreen implements Screen {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * Renders high scores and listens for exit inputs.
+     */
     @Override
     public void render(float delta) {
         ScreenUtils.clear(0, 0, 0, 1);
@@ -87,8 +100,10 @@ public class HighScoreScreen implements Screen {
         float centerX = GameScreen.V_WIDTH / 2f;
         float startY = GameScreen.V_HEIGHT - 100;
 
+        // Render Title
         fontTitle.draw(game.batch, title, centerX - (titleLayout.width / 2f), startY);
 
+        // Render Scores or Empty state
         float scoreY = startY - 120;
         if (topScores.isEmpty()) {
             fontScore.draw(game.batch, emptyText, centerX - (emptyLayout.width / 2f), scoreY);
@@ -99,6 +114,7 @@ public class HighScoreScreen implements Screen {
             }
         }
 
+        // Render Return Prompt
         fontScore.getData().setScale(0.7f);
         fontScore.draw(game.batch, prompt, centerX - (promptLayout.width / 2f), 80);
         fontScore.getData().setScale(1f);
@@ -106,13 +122,14 @@ public class HighScoreScreen implements Screen {
 
         game.batch.end();
 
-        // --- INPUT HANDLING ---
+        // Handle navigation inputs
         if (Gdx.input.isKeyJustPressed(Input.Keys.BACKSPACE) || Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             game.setScreen(new MainMenuScreen(game));
             dispose();
         }
     }
 
+    /** {@inheritDoc} */
     @Override
     public void resize(int width, int height) {
         if (viewport != null)
@@ -135,6 +152,7 @@ public class HighScoreScreen implements Screen {
     public void hide() {
     }
 
+    /** {@inheritDoc} */
     @Override
     public void dispose() {
         fontTitle.dispose();

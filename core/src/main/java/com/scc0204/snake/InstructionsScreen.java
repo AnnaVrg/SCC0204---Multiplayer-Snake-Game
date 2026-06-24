@@ -13,6 +13,10 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
+/**
+ * Displays the game instructions and rules to the player.
+ * Allows navigation back to the main menu.
+ */
 public class InstructionsScreen implements Screen {
     private final SnakeGame game;
     private OrthographicCamera camera;
@@ -37,6 +41,11 @@ public class InstructionsScreen implements Screen {
             "5. The player with the highest score wins!",
     };
 
+    /**
+     * Initializes the instructions screen and pre-calculates UI layouts.
+     *
+     * @param game Reference to the main game instance.
+     */
     public InstructionsScreen(SnakeGame game) {
         this.game = game;
 
@@ -45,13 +54,13 @@ public class InstructionsScreen implements Screen {
 
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("Kenney Pixel.ttf"));
 
-        // Font for the Title
+        // Configure Title Font
         FreeTypeFontParameter paramTitle = new FreeTypeFontParameter();
         paramTitle.size = 80;
         paramTitle.color = Color.YELLOW;
         fontTitle = generator.generateFont(paramTitle);
 
-        // Font for the Rules Text
+        // Configure Text Font
         FreeTypeFontParameter paramText = new FreeTypeFontParameter();
         paramText.size = 35;
         paramText.color = Color.WHITE;
@@ -59,6 +68,7 @@ public class InstructionsScreen implements Screen {
 
         generator.dispose();
 
+        // Pre-calculate layouts for performance optimization
         titleLayout = new GlyphLayout(fontTitle, title);
         promptLayout = new GlyphLayout(fontText, prompt);
 
@@ -68,6 +78,10 @@ public class InstructionsScreen implements Screen {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * Renders instructions and processes return navigation.
+     */
     @Override
     public void render(float delta) {
         ScreenUtils.clear(0, 0, 0, 1);
@@ -78,8 +92,10 @@ public class InstructionsScreen implements Screen {
         float centerX = GameScreen.V_WIDTH / 2f;
         float startY = GameScreen.V_HEIGHT - 60;
 
+        // Render Header
         fontTitle.draw(game.batch, title, centerX - (titleLayout.width / 2f), startY);
 
+        // Render Rules and Controls
         float textY = startY - 80;
         for (int i = 0; i < lines.length; i++) {
             if (lines[i].startsWith("---"))
@@ -91,18 +107,20 @@ public class InstructionsScreen implements Screen {
             textY -= 40;
         }
 
+        // Render Footer Prompt
         fontText.setColor(Color.GRAY);
         fontText.draw(game.batch, prompt, centerX - (promptLayout.width / 2f), 50);
 
         game.batch.end();
 
-        // --- INPUT HANDLING ---
+        // Handle return navigation
         if (Gdx.input.isKeyJustPressed(Input.Keys.BACKSPACE) || Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             game.setScreen(new MainMenuScreen(game));
             dispose();
         }
     }
 
+    /** {@inheritDoc} */
     @Override
     public void resize(int width, int height) {
         if (viewport != null)
@@ -125,6 +143,7 @@ public class InstructionsScreen implements Screen {
     public void hide() {
     }
 
+    /** {@inheritDoc} */
     @Override
     public void dispose() {
         fontTitle.dispose();

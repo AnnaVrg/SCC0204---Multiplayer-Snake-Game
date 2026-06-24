@@ -13,6 +13,10 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
+/**
+ * Handles the game settings menu, allowing players to configure
+ * grid dimensions and movement speed.
+ */
 public class SettingsScreen implements Screen {
     private final SnakeGame game;
     private OrthographicCamera camera;
@@ -24,6 +28,11 @@ public class SettingsScreen implements Screen {
     private final String title = "SETTINGS";
     private final String prompt = "Press BACKSPACE to return";
 
+    /**
+     * Initializes the settings screen and pre-loads UI assets.
+     *
+     * @param game Reference to the main game instance.
+     */
     public SettingsScreen(SnakeGame game) {
         this.game = game;
         camera = new OrthographicCamera();
@@ -31,11 +40,13 @@ public class SettingsScreen implements Screen {
 
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("Kenney Pixel.ttf"));
 
+        // Configure Title Font
         FreeTypeFontParameter paramTitle = new FreeTypeFontParameter();
         paramTitle.size = 80;
         paramTitle.color = Color.YELLOW;
         fontTitle = generator.generateFont(paramTitle);
 
+        // Configure Menu Text Font
         FreeTypeFontParameter paramText = new FreeTypeFontParameter();
         paramText.size = 45;
         paramText.color = Color.WHITE;
@@ -48,6 +59,10 @@ public class SettingsScreen implements Screen {
         dynamicLayout = new GlyphLayout();
     }
 
+    /**
+     * {@inheritDoc}
+     * Renders configuration options and processes setting changes.
+     */
     @Override
     public void render(float delta) {
         ScreenUtils.clear(0, 0, 0, 1);
@@ -77,7 +92,7 @@ public class SettingsScreen implements Screen {
 
         game.batch.end();
 
-        // --- INPUT HANDLING ---
+        // Handles navigation input
         if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1) || Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_1)) {
             game.settings.toggleGridSize();
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_2) || Gdx.input.isKeyJustPressed(Input.Keys.NUMPAD_2)) {
@@ -88,6 +103,7 @@ public class SettingsScreen implements Screen {
         }
     }
 
+    /** {@inheritDoc} */
     @Override
     public void resize(int width, int height) {
         if (viewport != null)
@@ -110,6 +126,7 @@ public class SettingsScreen implements Screen {
     public void hide() {
     }
 
+    /** {@inheritDoc} */
     @Override
     public void dispose() {
         fontTitle.dispose();

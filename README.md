@@ -317,7 +317,7 @@ Antes de executar o projeto, certifique-se de ter os seguintes itens instalados:
 ### 2. Instalação
 Para clonar o repositório, utilize o comando abaixo:
 ```bash
-git clone [https://github.com/AnnaVrg/SCC0204---Multiplayer-Snake-Game.git]
+git clone https://github.com/AnnaVrg/SCC0204---Multiplayer-Snake-Game.git
 ```
 ### 3. Acessar o Diretório
 

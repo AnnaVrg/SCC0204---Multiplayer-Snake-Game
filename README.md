@@ -292,8 +292,11 @@ A execução dos testes é integrada ao ciclo de vida do Gradle. Abaixo, o outpu
 SnakeGameLogicTests > testWorldBoundsWrapping() PASSED
 SnakeGameLogicTests > testFoodTypesAndModifiers() PASSED
 SnakeGameLogicTests > testSnakeDigestionLogic() PASSED
+SnakeGameLogicTests > testCrossCollisionLogic() PASSED
+SnakeGameLogicTests > testScoreMinimumZeroLogic() PASSED
+SnakeGameLogicTests > testHighScoreSortingLogic() PASSED
 
-BUILD SUCCESSFUL in 1.2s
+BUILD SUCCESSFUL in 1.5s
 ```
 Além da confirmação via terminal, o Gradle gera um relatório detalhado em HTML que pode ser verificado em: 
 ```text

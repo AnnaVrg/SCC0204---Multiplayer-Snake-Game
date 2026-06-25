@@ -38,7 +38,7 @@ O sistema divide o gerenciamento e o controle das entidades de forma independent
 
 * 🍎 **Sistema de Frutas Dinâmico:** Frutas de cores distintas surgem aleatoriamente pelo cenário. Cada cor corresponde a uma pontuação e recompensa diferente ao ser consumida.
 * 💾 **Placar com Memória Local:** Armazenamento persistente das maiores pontuações (*High Scores*), garantindo a competição mesmo após o jogo ser fechado.
-* ⚖️ **Mecânica Antisuicídio (Equilíbrio):** A partida se encerra quando qualquer uma das cobras morre. Contudo, se um jogador causar a própria morte intencionalmente para congelar o placar, o sistema aplica uma severa **penalidade de pontos** na sua pontuação final.
+* ⚖️ **Mecânica Antisuicídio (Equilíbrio):** A partida se encerra quando qualquer uma das cobras morre. Contudo, se um jogador causar a própria morte intencionalmente, colidindo com o próprio corpo, para congelar o placar, o sistema aplica uma severa **penalidade de 10 pontos** na sua pontuação final.
 * 🖼️ **Gráficos Responsivos:** Ajuste automático de resolução de tela que preserva a proporção dos elementos visuais sem distorcer o grid do jogo.
 
 ---
@@ -269,13 +269,19 @@ Durante o desenvolvimento do projeto, a equipe enfrentou diversas adversidades n
 ---
 # 🧪 Testes Automatizados (JUnit 5)
 ### 1. Plano de Testes
-O plano de testes visa validar a lógica central do jogo de forma isolada, garantindo que as regras de negócio funcionem independentemente do motor gráfico. Utilizamos o framework **JUnit 5** para a implementação da suíte de testes.
+O plano de testes visa validar a lógica central do jogo de forma isolada, garantindo que as regras de negócio funcionem independentemente do motor gráfico LibGDX. Utilizamos o framework JUnit 5 para a implementação de seis testes unitários robustos que cobrem os requisitos funcionais críticos:
 
-* **Validação de Fronteiras (WorldBoundsTests):** Avaliou a lógica de \textit{wrapping} (teletransporte) nas bordas do mapa (grid 20x20). O teste confirma que coordenadas que extrapolam os limites da grade são mapeadas corretamente para a posição oposta.
+* **Validação de Fronteiras (`testWorldBoundsWrapping`):** Avalia a lógica de wrapping nas bordas do mapa. Confirma que coordenadas que extrapolam os limites da grade são mapeadas corretamente para a posição oposta, garantindo o comportamento de continuidade do mundo.
   
-* **Testes de Regras de Negócio (FoodTests):** Valida a classe `Food` e seus modificadores. O teste assegura que o sistema de `respawn` aplique pontuações e variações de tamanho consistentes para maçãs douradas (+10 pontos, +2 segmentos) e podres (-5 pontos, -1 segmento).
+* **Modificadores de Alimento (`testFoodTypesAndModifiers`):** Valida a classe `Food` e seus modificadores. O teste assegura que o sistema de `respawn` aplique pontuações e variações de tamanho consistentes para maçãs douradas (+10 pontos, +2 segmentos) e podres (-5 pontos, -1 segmento).
   
-* **Simulação de Ciclo de Vida (SnakeDigestionTests):** Valida a integridade da entidade `Snake`. O teste garante que, ao consumir uma maçã podre, a cobra encolha apenas até o limite mínimo de dois segmentos, evitando estados de erro ou desaparecimento da entidade.
+* **Ciclo de Vida da Cobra (`testSnakeDigestionLogic`):** Valida a integridade da entidade `Snake`. O teste garante que, ao consumir uma maçã podre e encolher, a cobra detecte corretamente o estado de morte caso o tamanho mínimo de dois segmentos seja atingido.
+
+* **Colisão Cruzada (`testCrossCollisionLogic`):** Simula a colisão frontal entre dois jogadores, validando se a lógica da `GameScreen` consegue identificar corretamente quando as cabeças de ambas as cobras ocupam a mesma coordenada.
+
+* **Trava de Pontuação (`testScoreMinimumZeroLogic`):** Verifica a regra de negócio que impede pontuações negativas, assegurando penalidades elevadas são corretamente tratadas.
+
+* **Ordenação de High Scores (`testHighScoreSortingLogic`):** Testa o componente de ordenação da classe `HighScoreManager`. Garante que a lista de pontuações seja sempre classificada em ordem decrescente (do maior para o menor), mantendo a integridade do ranking.
 
 ### 2. Resultados dos Testes
 A execução dos testes é integrada ao ciclo de vida do Gradle. Abaixo, o output gerado pela suíte de testes no ambiente de desenvolvimento:
@@ -300,26 +306,47 @@ core/build/reports/tests/test/index.html
 
 Siga os passos abaixo para baixar, compilar e executar o projeto diretamente na sua máquina local:
 
-### 1. Clonar o Repositório
-Abra o seu terminal e execute o comando abaixo para clonar o projeto:
+### 1. Pré-requisitos
+Antes de executar o projeto, certifique-se de ter os seguintes itens instalados:
+
+* JDK 17 ou superior: Este projeto está configurado para utilizar o Java 17 visando compatibilidade com as versões mais recentes do Gradle. Certifique-se de que a variável de ambiente JAVA_HOME esteja configurada corretamente para o diretório do seu JDK.
+
+### 2. Instalação
+Para clonar o repositório, utilize o comando abaixo:
 ```bash
-git clone [https://github.com/AnnaVrg/SCC0204---Multiplayer-Snake-Game.git](https://github.com/AnnaVrg/SCC0204---Multiplayer-Snake-Game.git)
-
+git clone [https://github.com/AnnaVrg/SCC0204---Multiplayer-Snake-Game.git]
 ```
-
-### 2. Acessar o Diretório
+### 3. Acessar o Diretório
 
 Navegue até a pasta raiz do repositório que foi clonado: 
 ```bash
 cd SCC0204---Multiplayer-Snake-Game 
 ```
 
-### 3. Compilar e Executar o Projeto
-Certifique-se de estar no diretório raiz e rode o comando de inicialização correspondente ao seu sistema operacional/terminal
+### 4. Compilar e Executar o Projeto
+Dependendo do seu sistema operacional, utilize o comando apropriado a partir da pasta raiz do projeto:
 
+* Linux/macOS
 ```bash
 ./gradlew lwjgl3:run
 ```
+* Windows:
+```bash
+gradlew.bat lwjgl3:run
+```
+### Executando os Testes
+Incluímos testes unitários para garantir que a lógica do jogo (como o comportamento das bordas e as regras de pontuação) funcione conforme o esperado. Para executar os testes, utilize:
+
+* Linux/macOS
+```bash
+./gradlew core:test
+```
+* Windows:
+```bash
+gradlew.bat core:test
+```
+**Relatórios de Teste:** Após a execução, um relatório detalhado em HTML será gerado. Você pode visualizá-lo em:
+core/build/reports/tests/test/index.html
 
 ---
 # 📝 Comentários Gerais

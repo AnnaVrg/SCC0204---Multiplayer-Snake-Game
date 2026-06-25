@@ -226,6 +226,17 @@ flowchart TD
 
 ---
 
+### Arquitetura do Sistema
+
+O diagrama abaixo ilustra a hierarquia de classes e as dependências entre os componentes do jogo:
+
+![Diagrama de Classes](assets/diagrama_classes.png)
+
+* **Herança:** As classes `Snake` e `Food` estendem a classe base `Entity`.
+* **Composição:** A `GameScreen` gerencia o ciclo de vida das entidades, enquanto a `Snake` utiliza a classe `WorldBounds` para a lógica de movimentação nas bordas.
+
+---
+
 # Comentários sobre o código
 
 O projeto foi organizado seguindo o princípio da separação de responsabilidades e a arquitetura baseada em estados (telas) do framework LibGDX, o que facilita a manutenção do código, a reutilização de componentes e futuras expansões.
